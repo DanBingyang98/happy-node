@@ -14,6 +14,7 @@
     <name>framework</name>
     <modules>
         <module>common</module>
+        <module>danby-spring-boot-starter-biz-operationlog</module>
     </modules>
 
 
