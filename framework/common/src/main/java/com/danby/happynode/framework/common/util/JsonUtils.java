@@ -1,10 +1,16 @@
 package com.danby.happynode.framework.common.util;
 
+import com.danby.happynode.framework.common.constant.DateConstants;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.SneakyThrows;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class JsonUtils {
     // 定义一个静态的 ObjectMapper 对象
@@ -17,7 +23,10 @@ public class JsonUtils {
         // 设置 ObjectMapper 对象在序列化时，如果遇到空对象，不抛出异常
         OBJECT_MAPPER.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         // 解决 LocalDateTime 的序列化问题
-        OBJECT_MAPPER.registerModules(new JavaTimeModule());
+        JavaTimeModule javaTimeModule = new JavaTimeModule();
+        javaTimeModule.addSerializer(LocalDateTime.class,new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(DateConstants.Y_M_D_H_M_S_FORMAT)));
+        javaTimeModule.addDeserializer(LocalDateTime.class,new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DateConstants.Y_M_D_H_M_S_FORMAT)));
+        OBJECT_MAPPER.registerModules(javaTimeModule);
     }
 
     @SneakyThrows

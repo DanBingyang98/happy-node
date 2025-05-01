@@ -36,6 +36,11 @@
             <groupId>com.danby.happynode.framework.common</groupId>
             <artifactId>happynode-framework-common</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.danby.happynode</groupId>
+            <artifactId>danby-spring-boot-starter-biz-operationlog</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
