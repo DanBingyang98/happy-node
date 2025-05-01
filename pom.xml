@@ -33,6 +33,8 @@
         <spring-cloud-alibaba.version>2023.0.1.0</spring-cloud-alibaba.version>
         <spirng-cloud.version>2023.0.1</spirng-cloud.version>
         <jackson.version>2.16.1</jackson.version>
+        <mysql-connector-java.version>8.0.18</mysql-connector-java.version>
+        <mybatis-boot-starter.version>3.0.3</mybatis-boot-starter.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -75,6 +77,17 @@
                 <artifactId>jackson-databind</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.mybatis.spring.boot</groupId>
+                <artifactId>mybatis-spring-boot-starter</artifactId>
+                <version>${mybatis-boot-starter.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql-connector-java.version}</version>
+            </dependency>
+            <!-- 自定义spring-boot-starter -->
             <dependency>
                 <groupId>com.danby.happynode</groupId>
                 <artifactId>danby-spring-boot-starter-biz-operationlog</artifactId>
