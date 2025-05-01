@@ -34,7 +34,7 @@ class AuthApplicationTests {
 
     @Test
     void testSelect() {
-        UserDO userDO = userDOMapper.selectByPrimaryKey(1L);
+        UserDO userDO = userDOMapper.selectByPrimaryKey(2L);
         log.info("userDO: {}", userDO);
     }
 
