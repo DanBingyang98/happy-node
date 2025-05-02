@@ -2,10 +2,9 @@ package com.danby.happynode.auth.controller;
 
 import com.danby.happynode.framework.biz.operationlog.aspect.ApiOperationLog;
 import com.danby.happynode.framework.common.response.Response;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.net.http.HttpRequest;
 import java.time.LocalDateTime;
 
 @RestController
@@ -24,6 +23,12 @@ public class TestController {
                 .nickName(name)
                 .createTime(LocalDateTime.now())
                 .build());
+    }
+
+    @PostMapping("/test3")
+    @ApiOperationLog(description = "测试接口3 传入localdatetime测试")
+    public Response<User> test3(@RequestBody User user) {
+        return Response.success(user);
     }
 
 }

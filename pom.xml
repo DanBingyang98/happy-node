@@ -94,10 +94,16 @@
                 <artifactId>druid-spring-boot-3-starter</artifactId>
                 <version>${druid.version}</version>
             </dependency>
-            <!-- 自定义spring-boot-starter -->
+            <!-- 自定义spring-boot-starter 请求日志切面 -->
             <dependency>
                 <groupId>com.danby.happynode</groupId>
                 <artifactId>danby-spring-boot-starter-biz-operationlog</artifactId>
+                <version>${revision}</version>
+            </dependency>
+            <!-- 自定义spring-boot-starter jackson适配LocalDateTime -->
+            <dependency>
+                <groupId>com.danby.happynode</groupId>
+                <artifactId>danby-spring-boot-starter-jackson-localdatetime</artifactId>
                 <version>${revision}</version>
             </dependency>
             <!-- 自定义基础模块的依赖 -->

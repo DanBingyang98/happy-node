@@ -1,6 +1,6 @@
 package com.danby.happynode.framework.common.util;
 
-import com.danby.happynode.framework.common.constant.DateConstants;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter;
 
 public class JsonUtils {
     // 定义一个静态的 ObjectMapper 对象
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     // 静态代码块，用于初始化 ObjectMapper 对象
     static {
@@ -23,10 +23,11 @@ public class JsonUtils {
         // 设置 ObjectMapper 对象在序列化时，如果遇到空对象，不抛出异常
         OBJECT_MAPPER.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         // 解决 LocalDateTime 的序列化问题
-        JavaTimeModule javaTimeModule = new JavaTimeModule();
-        javaTimeModule.addSerializer(LocalDateTime.class,new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(DateConstants.Y_M_D_H_M_S_FORMAT)));
-        javaTimeModule.addDeserializer(LocalDateTime.class,new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DateConstants.Y_M_D_H_M_S_FORMAT)));
-        OBJECT_MAPPER.registerModules(javaTimeModule);
+        OBJECT_MAPPER.registerModules(new JavaTimeModule());
+    }
+
+    public static void init(ObjectMapper objectMapper) {
+        OBJECT_MAPPER = objectMapper;
     }
 
     @SneakyThrows

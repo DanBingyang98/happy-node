@@ -1,4 +1,4 @@
-package com.danby.happynode.framework.common.constant;
+package com.danby.happynode.constant;
 
 import java.time.format.DateTimeFormatter;
 

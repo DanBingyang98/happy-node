@@ -55,6 +55,12 @@
             <artifactId>druid-spring-boot-3-starter</artifactId>
         </dependency>
 
+        <!-- 自定义spring-boot-starter jackson适配LocalDateTime -->
+        <dependency>
+            <groupId>com.danby.happynode</groupId>
+            <artifactId>danby-spring-boot-starter-jackson-localdatetime</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

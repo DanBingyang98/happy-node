@@ -14,5 +14,6 @@
     <modules>
         <module>common</module>
         <module>danby-spring-boot-starter-biz-operationlog</module>
+        <module>danby-spring-boot-starter-jackson-localdatetime</module>
     </modules>
 </project>
