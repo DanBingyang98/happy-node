@@ -9,8 +9,7 @@
     </parent>
     <groupId>com.danby</groupId>
     <artifactId>happynode-auth</artifactId>
-    <version>${revision}</version>
-    <name>happynode-auth</name>
+    <name>${project.artifactId}</name>
     <description>happynode auth</description>
 
     <dependencies>
@@ -29,12 +28,11 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.danby.happynode.framework.common</groupId>
-            <artifactId>happynode-framework-common</artifactId>
+            <artifactId>common</artifactId>
         </dependency>
 
         <dependency>
@@ -69,6 +67,11 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <!-- 代码生成器 -->
+            <plugin>
+                <groupId>org.mybatis.generator</groupId>
+                <artifactId>mybatis-generator-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

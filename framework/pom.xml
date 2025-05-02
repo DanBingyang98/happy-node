@@ -10,12 +10,9 @@
     <groupId>com.danby.happynode</groupId>
     <artifactId>happynode-framework</artifactId>
     <packaging>pom</packaging>
-
-    <name>framework</name>
+    <name>${project.artifactId}</name>
     <modules>
         <module>common</module>
         <module>danby-spring-boot-starter-biz-operationlog</module>
     </modules>
-
-
 </project>

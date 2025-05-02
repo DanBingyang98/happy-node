@@ -8,10 +8,10 @@
     </parent>
 
     <groupId>com.danby.happynode.framework.common</groupId>
-    <artifactId>happynode-framework-common</artifactId>
+    <artifactId>common</artifactId>
     <packaging>jar</packaging>
 
-    <name>common</name>
+    <name>${project.artifactId}</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

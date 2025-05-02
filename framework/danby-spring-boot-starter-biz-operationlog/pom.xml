@@ -10,7 +10,7 @@
     <artifactId>danby-spring-boot-starter-biz-operationlog</artifactId>
     <packaging>jar</packaging>
 
-    <name>danby-spring-boot-starter-biz-operationlog</name>
+    <name>${project.artifactId}</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -19,7 +19,7 @@
     <dependencies>
         <dependency>
             <groupId>com.danby.happynode.framework.common</groupId>
-            <artifactId>happynode-framework-common</artifactId>
+            <artifactId>common</artifactId>
         </dependency>
 
         <dependency>
