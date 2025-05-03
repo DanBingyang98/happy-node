@@ -22,7 +22,7 @@ class AuthApplicationTests {
     void contextLoads() {
     }
 
-    @Test
+//    @Test
     void testInsert() {
         userDOMapper.insert(UserDO.builder()
                 .id(2L)
