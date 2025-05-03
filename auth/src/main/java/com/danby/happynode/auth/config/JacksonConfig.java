@@ -1,6 +1,7 @@
 package com.danby.happynode.auth.config;
 
 import com.danby.happynode.framework.common.constant.DateConstants;
+import com.danby.happynode.framework.common.util.JsonUtils;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -25,9 +26,9 @@ import java.util.TimeZone;
 
 import static com.danby.happynode.framework.common.constant.DateConstants.*;
 
-
+//@Configuration
 public class JacksonConfig {
-    @Bean
+//    @Bean
     public ObjectMapper objectMapper() {
         // 初始化一个 ObjectMapper 对象，用于自定义 Jackson 的行为
         ObjectMapper objectMapper = new ObjectMapper();
@@ -57,7 +58,7 @@ public class JacksonConfig {
         javaTimeModule.addDeserializer(YearMonth.class, new YearMonthDeserializer(DATE_FORMAT_Y_M));
 
         objectMapper.registerModule(javaTimeModule);
-
+        JsonUtils.init(objectMapper);
         return objectMapper;
     }
 }

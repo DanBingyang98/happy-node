@@ -37,6 +37,39 @@ spring:
         wall: # 防火墙
           config:
             multi-statement-allow: true
+  jackson:
+    constructor-detector: EXPLICIT_ONLY
+    # 设置日志格式化格式，配置为日期格式字符串或完全限定的日期格式类名。例如 yyyy-MM-dd HH:mm:ss
+    date-format: yyyy-MM-dd HH:mm:ss
+    # 宽松的全局默认设置
+    default-leniency: true
+    # 控制序列化期间包含的属性。使用 Jackson 的 JsonInclude.Include 枚举中的值之一进行配置。
+    default-property-inclusion: always
+    # 序列化配置 ，MAP 集合 ， Map<SerializationFeature, Boolean>
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+      EAGER_SERIALIZER_FETCH: true
+    # 反序列化特征，Map<DeserializationFeature, Boolean>
+    deserialization:
+      USE_BIG_DECIMAL_FOR_FLOATS: true
+    # ObjectMapper/JsonMapper特征,Map<MapperFeature, Boolean>
+    mapper:
+      AUTO_DETECT_GETTERS: true
+    # 生成器JsonGenerator.Feature，Map<com.fasterxml.jackson.core.JsonGenerator.Feature, Boolean>
+    generator:
+      AUTO_CLOSE_TARGET: true
+    # 地区
+    locale: zh_CN
+    # 解析器 Map<Feature, Boolean>
+    # parser:
+    # 设置属性命名策略,对应jackson下PropertyNamingStrategy中的常量值，SNAKE_CASE-返回的json驼峰式转下划线，json body下划线传到后端自动转驼峰式
+    property-naming-strategy: SNAKE_CASE
+    # 全局时区
+    time-zone: Asia/Shanghai
+    # 可见性阈值，可用于限制自动检测哪些方法（和字段）。
+    visibility:
+      GETTER: ANY
+
 mybatis:
   mapper-locations: classpath:/mapper/**/*.xml
 logging:

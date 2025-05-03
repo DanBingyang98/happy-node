@@ -32,7 +32,6 @@
         <spring-boot.version>3.2.4</spring-boot.version>
         <spring-cloud-alibaba.version>2023.0.1.0</spring-cloud-alibaba.version>
         <spirng-cloud.version>2023.0.1</spirng-cloud.version>
-        <jackson.version>2.16.1</jackson.version>
         <mysql-connector-java.version>8.0.18</mysql-connector-java.version>
         <mybatis-boot-starter.version>3.0.3</mybatis-boot-starter.version>
         <druid.version>1.2.23</druid.version>
@@ -63,18 +62,6 @@
                 <version>${spirng-cloud.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
-            <!-- json转换相关的依赖 -->
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <!-- json转换相关的依赖 -->
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
             </dependency>
             <!-- mybatis整合springboot的依赖 -->
             <dependency>

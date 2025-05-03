@@ -3,7 +3,6 @@ package com.danby.happynode.framework.biz.operationlog.aspect;
 import com.danby.happynode.framework.common.util.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
@@ -56,7 +55,5 @@ public class ApiOperationLogAspect {
     private String getApiOperationLogDescription(ProceedingJoinPoint joinPoint) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         return signature.getMethod().getAnnotation(ApiOperationLog.class).description();
-
     }
-
 }
