@@ -1,11 +1,11 @@
 package com.danby.happynode.auth.controller;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.danby.happynode.framework.biz.operationlog.aspect.ApiOperationLog;
 import com.danby.happynode.framework.common.response.Response;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.http.HttpRequest;
 import java.time.LocalDateTime;
 
 @RestController
@@ -32,5 +32,22 @@ public class TestController {
     public Response<User> test3(@RequestBody @Validated User user) {
         return Response.success(user);
     }
+
+    @GetMapping("/user/doLogin")
+    public String doLogin(@RequestParam("username") String username, @RequestParam("password") String password) {
+        // 此处仅作模拟示例，真实项目需要从数据库中查询数据进行比对
+        if("danby".equals(username) && "123456".equals(password)) {
+            StpUtil.login(10001);
+            return "登录成功";
+        }
+        return "登录失败";
+    }
+
+    // 查询登录状态，浏览器访问： http://localhost:8080/user/isLogin
+    @GetMapping("/user/isLogin")
+    public String isLogin() {
+        return "当前会话是否登录：" + StpUtil.isLogin();
+    }
+
 
 }
