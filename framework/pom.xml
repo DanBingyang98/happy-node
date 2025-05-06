@@ -3,12 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.danby</groupId>
-        <artifactId>happynode</artifactId>
+        <artifactId>happy-node</artifactId>
         <version>${revision}</version>
     </parent>
 
     <groupId>com.danby.happynode</groupId>
-    <artifactId>happynode-framework</artifactId>
+    <artifactId>happy-node-framework</artifactId>
     <packaging>pom</packaging>
     <name>${project.artifactId}</name>
     <modules>

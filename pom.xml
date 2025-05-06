@@ -3,11 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.danby</groupId>
-    <artifactId>happynode</artifactId>
+    <artifactId>happy-node</artifactId>
     <version>${revision}</version>
     <packaging>pom</packaging>
 
-    <name>happynode</name>
+    <name>${artifactId}</name>
     <description>HappyNode, imitate Little Red Book, based on SpringCloudAlibaba, only for study</description>
 
     <modules>
