@@ -4,11 +4,11 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.danby</groupId>
-    <artifactId>happynode</artifactId>
+    <artifactId>happy-node</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
   <groupId>com.danby</groupId>
-  <artifactId>happynode-auth</artifactId>
+  <artifactId>auth</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>${project.artifactId}</name>
   <description>happynode auth</description>
@@ -45,6 +45,18 @@
     <dependency>
       <groupId>com.alibaba</groupId>
       <artifactId>druid-spring-boot-3-starter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>cn.dev33</groupId>
+      <artifactId>sa-token-spring-boot3-starter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-pool2</artifactId>
     </dependency>
     <dependency>
       <groupId>com.danby.happynode</groupId>
