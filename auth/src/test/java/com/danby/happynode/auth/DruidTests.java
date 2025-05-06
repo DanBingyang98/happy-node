@@ -8,7 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 @Slf4j
-public class DruidTest {
+public class DruidTests {
     @Test
     @SneakyThrows
     void testEncodePassword() {

@@ -8,7 +8,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 
 @SpringBootTest
 @Slf4j
-public class RedisTest {
+public class RedisTests {
 
     @Resource
     public RedisTemplate<String, Object> redisTemplate;
