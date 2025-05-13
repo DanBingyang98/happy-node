@@ -24,6 +24,7 @@
             <scope>test</scope>
         </dependency>
 
+
         <!-- Lombok依赖 -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -70,6 +71,12 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-pool2</artifactId>
+        </dependency>
+
+        <!-- 阿里云短信服务 -->
+        <dependency>
+            <groupId>com.aliyun</groupId>
+            <artifactId>dysmsapi20170525</artifactId>
         </dependency>
 
 <!--         自定义spring-boot-starter jackson适配LocalDateTime-->

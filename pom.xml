@@ -41,6 +41,7 @@
         <guava.version>33.0.0-jre</guava.version>
         <hutool.version>5.8.26</hutool.version>
         <commons-lang3.version>3.12.0</commons-lang3.version>
+        <alibaba-sms.version>4.1.0</alibaba-sms.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -127,6 +128,12 @@
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-all</artifactId>
                 <version>${hutool.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.aliyun</groupId>
+                <artifactId>dysmsapi20170525</artifactId>
+                <version>${alibaba-sms.version}</version>
             </dependency>
 
         </dependencies>
