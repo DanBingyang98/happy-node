@@ -88,6 +88,3 @@ mybatis:
 logging:
   level:
     com.danby.happynode.auth.domain.mapper: debug
-aliyun: # 接入阿里云（发送短信使用）
-  accessKeyId: LTAI5tD93gJUh97AqLCcFy1X # 填写你自己的
-  accessKeySecret: 4M6RBA7GBvRqSroLfBEOTqclyFOuv2 # 填写你自己的
