@@ -88,3 +88,6 @@ mybatis:
 logging:
   level:
     com.danby.happynode.auth.domain.mapper: debug
+aliyun:
+  access-key-id: xxx
+  access-key-secret: xxx
