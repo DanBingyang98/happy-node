@@ -42,12 +42,12 @@ public class VerificationServiceImpl implements VerificationService {
         // 生成 6 位随机数字验证码
         String verificationCode = RandomUtil.randomNumbers(6);
         // 调用第三方短信发送业务
-        threadPoolTaskExecutor.submit(() -> {
-            String signName = "阿里云短信测试";
-            String templateCode = "SMS_154950909";
-            String templateParam = "{\"code\":\"" + verificationCode + "\"}";
-            aliyunSmsHelper.sendMessage(signName, templateCode, phone, templateParam);
-        });
+//        threadPoolTaskExecutor.submit(() -> {
+//            String signName = "阿里云短信测试";
+//            String templateCode = "SMS_154950909";
+//            String templateParam = "{\"code\":\"" + verificationCode + "\"}";
+//            aliyunSmsHelper.sendMessage(signName, templateCode, phone, templateParam);
+//        });
         log.info("发送验证码到手机号{}，验证码为{}", phone, verificationCode);
         // 存储验证码到 redis, 并设置过期时间为 3 分钟
         redisTemplate.opsForValue().set(verificationCodeKey, verificationCode, 3, TimeUnit.MINUTES);

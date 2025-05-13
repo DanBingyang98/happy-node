@@ -9,7 +9,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 @Configuration
 public class ThreadPoolConfig {
 
-    @Bean(name = "taskExecutor")
+    @Bean(name = "threadPoolTaskExecutor")
     // 创建一个名为taskExecutor的Bean
     public ThreadPoolTaskExecutor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
