@@ -16,4 +16,24 @@ public class RedisKeyConstant {
         return VERIFICATION_CODE_KEY_PREFIX + phone;
     }
 
+    /**
+     * HappyNode 全局 ID 生成器 KEY
+     */
+    public static final String HAPPYNODE_ID_GENERATOR_KEY = "happynode_id_generator";
+
+    /**
+     * 用户角色 KEY 前缀
+     */
+    public static final String USER_ROLE_KEY_PREFIX = "user:roles:";
+
+    /**
+     * 构建用户角色 KEY
+     *
+     * @param phone
+     * @return
+     */
+    public static String buildUserRoleKey(String phone) {
+        return USER_ROLE_KEY_PREFIX + phone;
+    }
+
 }

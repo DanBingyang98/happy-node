@@ -41,13 +41,13 @@ public class ApiOperationLogAspect {
         String description = getApiOperationLogDescription(joinPoint);
 
         // 记录API操作日志
-        log.info("====== 请求开始: [{}], 入参: {}, 请求类: {}, 请求方法: {} =================================== ",
+        log.info("====== 请求开始: [{}], 入参: {}, 请求类: {}, 请求方法: {}",
                 description, argsJsonStr, className, methodName);
         // 执行目标方法
         Object result = joinPoint.proceed();
         long executionTime = System.currentTimeMillis() - startTime;
         // 打印出参等相关信息
-        log.info("====== 请求结束: [{}], 耗时: {}ms, 出参: {} =================================== ",
+        log.info("====== 请求结束: [{}], 耗时: {}ms, 出参: {}",
                 description, executionTime, JsonUtils.toJsonString(result));
         return result;
     }
