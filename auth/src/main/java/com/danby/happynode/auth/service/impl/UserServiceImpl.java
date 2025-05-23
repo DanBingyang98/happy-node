@@ -21,7 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.testng.util.Strings;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -37,6 +37,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
     @Override
     public Response<String> loginAndRegister(UserLoginReqVO userLoginReqVO) {
@@ -92,31 +95,47 @@ public class UserServiceImpl implements UserService {
         return null;
     }
 
-    @Transactional(rollbackFor = Exception.class)
+    /**
+     * 注册用户
+     * @param phone
+     * @return
+     */
     public Long registerUser(String phone) {
-        // 创建新用户对象
-        Long happynodeId = redisTemplate.opsForValue().increment(RedisKeyConstant.HAPPYNODE_ID_GENERATOR_KEY);
-        UserDO userDO = UserDO.builder()
-                .happynodeId(String.valueOf(happynodeId))
-                .phone(phone)
-                .nickname("小红薯" + happynodeId)
-                .status(StatusEnum.ENABLED.getValue())
-                .isDeleted(DeleteEnum.NO.getValue())
-                .createTime(LocalDateTime.now())
-                .updateTime(LocalDateTime.now())
-                .build();
-        // 插入数据库
-        userDOMapper.insert(userDO);
-        // 获得新用户对象id
-        Long userId = userDO.getId();
-        // 分配角色
-        UserRoleDO userRoleDO = new UserRoleDO();
-        List<Long> roleIds = new ArrayList<>();
-        roleIds.add(RoleConstants.COMMON_USER_ID);
-        String redisKey = RedisKeyConstant.buildUserRoleKey(phone);
-        // 将用户月色信息存入redis 方便后续鉴权
-        redisTemplate.opsForValue().set(redisKey, JsonUtils.toJsonString(roleIds));
-        return userId;
+        return transactionTemplate.execute(status -> {
+            try {
+                // 创建新用户对象
+                Long happynodeId = redisTemplate.opsForValue().increment(RedisKeyConstant.HAPPYNODE_ID_GENERATOR_KEY);
+                UserDO userDO = UserDO.builder()
+                        .happynodeId(String.valueOf(happynodeId))
+                        .phone(phone)
+                        .nickname("小红薯" + happynodeId)
+                        .status(StatusEnum.ENABLED.getValue())
+                        .isDeleted(DeleteEnum.NO.getValue())
+                        .createTime(LocalDateTime.now())
+                        .updateTime(LocalDateTime.now())
+                        .build();
+                // 插入数据库
+                userDOMapper.insert(userDO);
+
+                // 制造异常 测试事务
+//                int i = 1 / 0;
+
+                // 获得新用户对象id
+                Long userId = userDO.getId();
+                // 分配角色
+                UserRoleDO userRoleDO = new UserRoleDO();
+                List<Long> roleIds = new ArrayList<>();
+                roleIds.add(RoleConstants.COMMON_USER_ID);
+                String redisKey = RedisKeyConstant.buildUserRoleKey(phone);
+                // 将用户月色信息存入redis 方便后续鉴权
+                redisTemplate.opsForValue().set(redisKey, JsonUtils.toJsonString(roleIds));
+                return userId;
+            } catch (Exception e) {
+                status.setRollbackOnly(); // 标记事务为回滚
+                log.error("==> 系统注册用户异常: ", e);
+                return null;
+            }
+        });
     }
 }
 
