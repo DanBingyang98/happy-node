@@ -8,14 +8,12 @@ import com.danby.happynode.auth.service.VerificationService;
 import com.danby.happynode.auth.sms.AliyunSmsHelper;
 import com.danby.happynode.framework.common.exception.BusinessException;
 import com.danby.happynode.framework.common.response.Response;
-import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 @Service

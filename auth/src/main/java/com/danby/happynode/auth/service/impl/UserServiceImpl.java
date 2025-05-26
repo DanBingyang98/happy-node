@@ -15,6 +15,7 @@ import com.danby.happynode.framework.common.enums.DeleteEnum;
 import com.danby.happynode.framework.common.enums.StatusEnum;
 import com.danby.happynode.framework.common.response.Response;
 import com.danby.happynode.framework.common.util.JsonUtils;
+import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,11 +70,10 @@ public class UserServiceImpl implements UserService {
     private Long loginByCode(UserLoginReqVO userLoginReqVO) {
         String phone = userLoginReqVO.getPhone();
         String verificationCode = userLoginReqVO.getCode();
-        if (StringUtils.isBlank(verificationCode)) {
-            return null;
-        }
+        Preconditions.checkArgument(StringUtils.isBlank(verificationCode),"验证码为空");
         String redisVerificationCodeKey = RedisKeyConstant.buildVerificationCodeKey(phone);
         Integer redisVerificationCode = (Integer) redisTemplate.opsForValue().get(redisVerificationCodeKey);
+
         if (redisVerificationCode != null && !StringUtils.equals(redisVerificationCode.toString(), verificationCode)) {
             return null;
         }

@@ -1,6 +1,9 @@
 package com.danby.happynode.auth.domain.mapper;
 
 import com.danby.happynode.auth.domain.dataobject.RoleDO;
+import com.danby.happynode.auth.domain.dataobject.RolePermissionDO;
+
+import java.util.List;
 
 public interface RoleDOMapper {
     int deleteByPrimaryKey(Long id);
@@ -14,4 +17,7 @@ public interface RoleDOMapper {
     int updateByPrimaryKeySelective(RoleDO record);
 
     int updateByPrimaryKey(RoleDO record);
+
+    List<RoleDO> selectEnabledList();
+
 }
