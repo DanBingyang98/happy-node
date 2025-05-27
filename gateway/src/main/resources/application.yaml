@@ -1,6 +1,5 @@
 server:
   port: 8000
-
 spring:
   application:
     name: happynode-gateway # 应用名称
@@ -16,11 +15,18 @@ spring:
         group: default # 所属组
         namespace: happynode # 命名空间
         server-addr: 10.0.0.201:8848 # Nacos 服务器地址
-    gateway:
-      routes:
-        - id: auth
-          uri: lb://happynode-auth
-          predicates:
-            - Path=/auth/**
-          filters:
-            - StripPrefix=1
+      config:
+        file-extension: yaml
+        namespace: happynode
+        group: gateway
+  config:
+    import:
+      - nacos:happynode-gateway-dev?refreshEnabled=true  # 自动加载 happynode-gateway-dev.yaml
+#    gateway:
+#      routes:
+#        - id: auth
+#          uri: lb://happynode-auth
+#          predicates:
+#            - Path=/auth/**
+#          filters:
+#            - StripPrefix=1
