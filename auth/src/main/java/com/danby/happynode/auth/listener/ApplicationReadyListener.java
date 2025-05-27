@@ -1,4 +1,4 @@
-package com.danby.happynode.auth.runner;
+package com.danby.happynode.auth.listener;
 
 import cn.hutool.core.collection.CollUtil;
 import com.danby.happynode.auth.constant.RedisKeyConstant;
@@ -11,38 +11,38 @@ import com.danby.happynode.auth.domain.mapper.RolePermissionDOMapper;
 import com.danby.happynode.framework.common.util.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.testng.collections.Maps;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-//@Component
+@Component
 @Slf4j
-public class PushRolePermission2RedisRunner implements ApplicationRunner {
-//    @Autowired
+public class ApplicationReadyListener {
+
+    @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
-//    @Autowired
+    @Autowired
     private RoleDOMapper roleDOMapper;
 
-//    @Autowired
+    @Autowired
     private PermissionDOMapper permissionDOMapper;
 
-//    @Autowired
+    @Autowired
     private RolePermissionDOMapper rolePermissionDOMapper;
 
     private static final String PUSH_PERMISSION_FLAG = "push.permission.flag";
 
-    @Override
-    public void run(ApplicationArguments args) throws Exception {
+    @EventListener(ApplicationReadyEvent.class)
+    public void pushPermission2Redis() {
         log.info("PushRolePermission2RedisRunner start");
         try {
             Boolean canPush = redisTemplate.opsForValue().setIfAbsent(PUSH_PERMISSION_FLAG, "1", 1, TimeUnit.DAYS);
@@ -84,4 +84,5 @@ public class PushRolePermission2RedisRunner implements ApplicationRunner {
         }
         log.info("PushRolePermission2RedisRunner end");
     }
+
 }

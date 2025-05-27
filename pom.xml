@@ -42,6 +42,7 @@
         <hutool.version>5.8.26</hutool.version>
         <commons-lang3.version>3.12.0</commons-lang3.version>
         <alibaba-sms.version>4.1.0</alibaba-sms.version>
+        <nacos.version>2.3.2</nacos.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -141,6 +142,12 @@
                 <artifactId>sa-token-redis-jackson</artifactId>
                 <version>${sa-token.version}</version>
             </dependency>
+
+<!--            <dependency>-->
+<!--                <groupId>com.alibaba.cloud</groupId>-->
+<!--                <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>-->
+<!--                <version>${nacos.version}</version>-->
+<!--            </dependency>-->
 
         </dependencies>
     </dependencyManagement>
