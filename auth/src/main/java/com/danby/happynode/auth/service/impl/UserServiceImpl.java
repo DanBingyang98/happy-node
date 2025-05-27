@@ -70,7 +70,10 @@ public class UserServiceImpl implements UserService {
     private Long loginByCode(UserLoginReqVO userLoginReqVO) {
         String phone = userLoginReqVO.getPhone();
         String verificationCode = userLoginReqVO.getCode();
-        Preconditions.checkArgument(StringUtils.isBlank(verificationCode),"验证码为空");
+//        Preconditions.checkArgument(StringUtils.isBlank(verificationCode),"验证码为空");
+        if (StringUtils.isBlank(verificationCode)) {
+            throw new IllegalArgumentException("验证码为空");
+        }
         String redisVerificationCodeKey = RedisKeyConstant.buildVerificationCodeKey(phone);
         Integer redisVerificationCode = (Integer) redisTemplate.opsForValue().get(redisVerificationCodeKey);
 

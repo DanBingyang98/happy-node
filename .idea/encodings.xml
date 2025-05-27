@@ -11,6 +11,8 @@
     <file url="file://$PROJECT_DIR$/framework/danby-spring-boot-starter-jackson-localdatetime/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/framework/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/framework/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/gateway/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/gateway/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
   </component>
