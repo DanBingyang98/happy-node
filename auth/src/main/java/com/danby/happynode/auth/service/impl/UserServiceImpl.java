@@ -4,9 +4,12 @@ import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import com.danby.happynode.auth.constant.RedisKeyConstant;
 import com.danby.happynode.auth.constant.RoleConstants;
+import com.danby.happynode.auth.domain.dataobject.RoleDO;
 import com.danby.happynode.auth.domain.dataobject.UserDO;
 import com.danby.happynode.auth.domain.dataobject.UserRoleDO;
+import com.danby.happynode.auth.domain.mapper.RoleDOMapper;
 import com.danby.happynode.auth.domain.mapper.UserDOMapper;
+import com.danby.happynode.auth.domain.mapper.UserRoleDOMapper;
 import com.danby.happynode.auth.enums.LoginTypeEnum;
 import com.danby.happynode.auth.enums.ResponseCodeEnum;
 import com.danby.happynode.auth.model.vo.user.UserLoginReqVO;
@@ -41,6 +44,11 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private TransactionTemplate transactionTemplate;
+    @Autowired
+    private UserRoleDOMapper userRoleDOMapper;
+
+    @Autowired
+    private RoleDOMapper roleDOMapper;
 
     @Override
     public Response<String> loginAndRegister(UserLoginReqVO userLoginReqVO) {
@@ -100,6 +108,7 @@ public class UserServiceImpl implements UserService {
 
     /**
      * 注册用户
+     *
      * @param phone
      * @return
      */
@@ -126,12 +135,21 @@ public class UserServiceImpl implements UserService {
                 // 获得新用户对象id
                 Long userId = userDO.getId();
                 // 分配角色
-                UserRoleDO userRoleDO = new UserRoleDO();
-                List<Long> roleIds = new ArrayList<>();
-                roleIds.add(RoleConstants.COMMON_USER_ID);
-                String redisKey = RedisKeyConstant.buildUserRoleKey(phone);
+                UserRoleDO userRoleDO = UserRoleDO.builder()
+                        .userId(userId)
+                        .roleId(RoleConstants.COMMON_USER_ID)
+                        .createTime(LocalDateTime.now())
+                        .updateTime(LocalDateTime.now())
+                        .isDeleted(DeleteEnum.NO.getValue())
+                        .build();
+                userRoleDOMapper.insert(userRoleDO);
+                // 将该用户的角色 ID 存入 Redis 中
+                RoleDO roleDO = roleDOMapper.selectByPrimaryKey(RoleConstants.COMMON_USER_ID);
+                List<String> roles = new ArrayList<>(1);
+                roles.add(roleDO.getRoleKey());
+                String redisKey = RedisKeyConstant.buildUserRoleKey(userId);
                 // 将用户月色信息存入redis 方便后续鉴权
-                redisTemplate.opsForValue().set(redisKey, JsonUtils.toJsonString(roleIds));
+                redisTemplate.opsForValue().set(redisKey, roles);
                 return userId;
             } catch (Exception e) {
                 status.setRollbackOnly(); // 标记事务为回滚

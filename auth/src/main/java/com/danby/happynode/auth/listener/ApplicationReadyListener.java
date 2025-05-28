@@ -64,18 +64,18 @@ public class ApplicationReadyListener {
                         Collectors.toMap(PermissionDO::getId, permissionDO -> permissionDO)
                 );
                 // 组织 角色ID-权限 关系
-                Map<Long, List<PermissionDO>> roleIdPermissionsMap = Maps.newHashMap();
-                roleIds.forEach(roleId -> {
-                    List<Long> permissionIds = roleIdPermissionIdsMap.get(roleId);
+                Map<String, List<String>> roleKeyPermissionsMap = Maps.newHashMap();
+                roles.forEach(role -> {
+                    List<Long> permissionIds = roleIdPermissionIdsMap.get(role.getId());
                     if (CollUtil.isNotEmpty(permissionIds)) {
-                        List<PermissionDO> permissionDOs = permissionIds.stream().map(permissionIdMap::get).filter(Objects::nonNull).toList();
-                        roleIdPermissionsMap.put(roleId, permissionDOs);
+                        List<String> permissionKeys = permissionIds.stream().map(permissionIdMap::get).filter(Objects::nonNull).map(PermissionDO::getPermissionKey).toList();
+                        roleKeyPermissionsMap.put(role.getRoleKey(), permissionKeys);
                     }
                 });
                 // 存入redis  同步至 Redis 中，方便后续网关查询鉴权使用
-                roleIdPermissionsMap.forEach((roleId, permissionDOs) -> {
-                    String key = RedisKeyConstant.buildRolePermissionsKey(roleId);
-                    redisTemplate.opsForValue().set(key, JsonUtils.toJsonString(permissionDOs));
+                roleKeyPermissionsMap.forEach((roleKey, permissionKeys) -> {
+                    String key = RedisKeyConstant.buildRolePermissionsKey(roleKey);
+                    redisTemplate.opsForValue().set(key, JsonUtils.toJsonString(permissionKeys));
                 });
             }
             log.info("PushRolePermission2RedisRunner succeed");
