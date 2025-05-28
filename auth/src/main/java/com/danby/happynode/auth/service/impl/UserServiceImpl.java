@@ -14,10 +14,12 @@ import com.danby.happynode.auth.domain.mapper.UserRoleDOMapper;
 import com.danby.happynode.auth.enums.LoginTypeEnum;
 import com.danby.happynode.auth.enums.ResponseCodeEnum;
 
+import com.danby.happynode.auth.model.vo.user.UpdatePasswordReqVO;
 import com.danby.happynode.auth.model.vo.user.UserLoginReqVO;
 import com.danby.happynode.auth.service.UserService;
 import com.danby.happynode.framework.common.enums.DeleteEnum;
 import com.danby.happynode.framework.common.enums.StatusEnum;
+import com.danby.happynode.framework.common.exception.BusinessException;
 import com.danby.happynode.framework.common.response.Response;
 import com.danby.happynode.framework.common.util.JsonUtils;
 import com.google.common.base.Preconditions;
@@ -25,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -53,11 +56,19 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private RoleDOMapper roleDOMapper;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Override
     public Response<String> loginAndRegister(UserLoginReqVO userLoginReqVO) {
         Long userId = null;
         Integer typeValue = userLoginReqVO.getType();
         LoginTypeEnum type = LoginTypeEnum.valueOf(typeValue);
+
+        // 登录类型错误
+        if (Objects.isNull(type)) {
+            throw new BusinessException(ResponseCodeEnum.LOGIN_TYPE_ERROR);
+        }
         switch (type) {
             case VERIFICATION_CODE:
                 userId = loginByCode(userLoginReqVO);
@@ -106,7 +117,16 @@ public class UserServiceImpl implements UserService {
 
     private Long loginByPassword(UserLoginReqVO userLoginReqVO) {
         // todo
-        return null;
+        String loginPassword = userLoginReqVO.getPassword();
+        String phone = userLoginReqVO.getPhone();
+        UserDO userDO = userDOMapper.selectByPhone(phone);
+        String dbPassword = userDO.getPassword();
+        boolean matches = passwordEncoder.matches(loginPassword, dbPassword);
+        if (!matches) {
+            throw new BusinessException(ResponseCodeEnum.PHONE_OR_PASSWORD_ERROR);
+        }
+
+        return userDO.getId();
     }
 
     /**
@@ -172,6 +192,20 @@ public class UserServiceImpl implements UserService {
         Long userId = LoginUserContextHolder.getUserId();
         log.info("==> 用户退出登录, userId: {}", userId);
         StpUtil.logout(userId);
+        return Response.success();
+    }
+
+    @Override
+    public Response<?> updatePassword(UpdatePasswordReqVO updatePasswordReqVO) {
+        String newPassword = updatePasswordReqVO.getNewPassword();
+        String encode = passwordEncoder.encode(newPassword);
+        Long userId = LoginUserContextHolder.getUserId();
+        UserDO userDO = UserDO.builder()
+                .id(userId)
+                .password(encode)
+                .updateTime(LocalDateTime.now())
+                .build();
+        userDOMapper.updateByPrimaryKeySelective(userDO);
         return Response.success();
     }
 }

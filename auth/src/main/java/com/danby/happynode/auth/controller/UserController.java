@@ -1,5 +1,6 @@
 package com.danby.happynode.auth.controller;
 
+import com.danby.happynode.auth.model.vo.user.UpdatePasswordReqVO;
 import com.danby.happynode.auth.model.vo.user.UserLoginReqVO;
 import com.danby.happynode.auth.service.UserService;
 import com.danby.happynode.framework.biz.operationlog.aspect.ApiOperationLog;
@@ -26,7 +27,12 @@ public class UserController {
     @PostMapping("/logout")
     @ApiOperationLog(description = "用户登出")
     public Response<?> logout() {
-        //todo 账号退出登录逻辑待实现
         return userService.logout();
+    }
+
+    @PostMapping("/password/update")
+    @ApiOperationLog(description = "修改密码")
+    public Response<?> updatePassword(@Validated @RequestBody UpdatePasswordReqVO updatePasswordReqVO) {
+        return userService.updatePassword(updatePasswordReqVO);
     }
 }

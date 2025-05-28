@@ -135,7 +135,11 @@
             <groupId>com.danby</groupId>
             <artifactId>danby-spring-boot-starter-biz-context</artifactId>
         </dependency>
-
+        <!-- 密码加密 -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+        </dependency>
 
         <!-- 用于触发配置刷新 -->
 <!--        <dependency>-->

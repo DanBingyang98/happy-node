@@ -1,11 +1,13 @@
 package com.danby.happynode.auth.service;
 
+import com.danby.happynode.auth.model.vo.user.UpdatePasswordReqVO;
 import com.danby.happynode.auth.model.vo.user.UserLoginReqVO;
 import com.danby.happynode.framework.common.response.Response;
 
 public interface UserService {
     /**
      * 登录与注册
+     *
      * @param userLoginReqVO
      * @return
      */
@@ -14,7 +16,15 @@ public interface UserService {
 
     /**
      * 退出登录
+     *
      * @return Response<?>
      */
     Response<?> logout();
+
+    /**
+     * 修改密码
+     * @param updatePasswordReqVO
+     * @return
+     */
+    Response<?> updatePassword(UpdatePasswordReqVO updatePasswordReqVO);
 }
