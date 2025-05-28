@@ -2,6 +2,7 @@ package com.danby.happynode.auth.service.impl;
 
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
+import com.danby.framework.context.holder.LoginUserContextHolder;
 import com.danby.happynode.auth.constant.RedisKeyConstant;
 import com.danby.happynode.auth.constant.RoleConstants;
 import com.danby.happynode.auth.domain.dataobject.RoleDO;
@@ -12,6 +13,7 @@ import com.danby.happynode.auth.domain.mapper.UserDOMapper;
 import com.danby.happynode.auth.domain.mapper.UserRoleDOMapper;
 import com.danby.happynode.auth.enums.LoginTypeEnum;
 import com.danby.happynode.auth.enums.ResponseCodeEnum;
+
 import com.danby.happynode.auth.model.vo.user.UserLoginReqVO;
 import com.danby.happynode.auth.service.UserService;
 import com.danby.happynode.framework.common.enums.DeleteEnum;
@@ -26,6 +28,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -157,6 +160,19 @@ public class UserServiceImpl implements UserService {
                 return null;
             }
         });
+    }
+
+    /**
+     * 退出登录
+     *
+     * @return Response<String>
+     */
+    public Response<?> logout() {
+        // 退出登录 (指定用户 ID)
+        Long userId = LoginUserContextHolder.getUserId();
+        log.info("==> 用户退出登录, userId: {}", userId);
+        StpUtil.logout(userId);
+        return Response.success();
     }
 }
 

@@ -130,6 +130,11 @@
             <artifactId>commons-pool2</artifactId>
         </dependency>
 
+        <!-- 上下文组件 -->
+        <dependency>
+            <groupId>com.danby</groupId>
+            <artifactId>danby-spring-boot-starter-biz-context</artifactId>
+        </dependency>
 
 
         <!-- 用于触发配置刷新 -->
