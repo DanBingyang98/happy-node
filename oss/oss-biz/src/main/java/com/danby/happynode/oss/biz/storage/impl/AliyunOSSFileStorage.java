@@ -1,14 +1,51 @@
 package com.danby.happynode.oss.biz.storage.impl;
 
+import com.aliyun.oss.OSS;
 import com.danby.happynode.oss.biz.storage.FileStorage;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.ByteArrayInputStream;
+import java.util.UUID;
 
 @Slf4j
 public class AliyunOSSFileStorage implements FileStorage {
 
+    @Autowired
+    private OSS ossClient;
+
+    @Value("${aliyun.endpoint}")
+    private String aliyunEndpoint;
+
     @Override
+    @SneakyThrows
     public String uploadFile(MultipartFile file, String bucketName) {
-        return "";
+        log.info("## 上传文件至阿里云 OSS ...");
+
+        // 判断文件是否为空
+        if (file == null || file.getSize() == 0) {
+            log.error("==> 上传文件异常：文件大小为空 ...");
+            throw new RuntimeException("文件大小不能为空");
+        }
+
+        // 文件的原始名称
+        String originalFileName = file.getOriginalFilename();
+        // 生成存储对象的名称（将 UUID 字符串中的 - 替换成空字符串）
+        String key = UUID.randomUUID().toString().replace("-", "");
+        // 获取文件的后缀，如 .jpg
+        String suffix = originalFileName.substring(originalFileName.lastIndexOf("."));
+        // 拼接上文件后缀，即为要存储的文件名
+        String objectName = String.format("%s%s", key, suffix);
+        log.info("==> 开始上传文件至阿里云 OSS, ObjectName: {}", objectName);
+        // 上传文件至阿里云 OSS
+        ossClient.putObject(bucketName, objectName, new ByteArrayInputStream(file.getInputStream().readAllBytes()));
+
+        // 返回文件的访问链接
+        String url = String.format("https://%s.%s/%s", bucketName, aliyunEndpoint, objectName);
+        log.info("==> 上传文件至阿里云 OSS 成功，访问路径: {}", url);
+        return url;
     }
 }
