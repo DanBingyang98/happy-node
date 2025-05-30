@@ -23,5 +23,11 @@
     <file url="file://$PROJECT_DIR$/oss/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/user/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/user/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/user/user-api/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/user/user-api/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/user/user-biz/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/user/user-biz/src/main/resources" charset="UTF-8" />
   </component>
 </project>

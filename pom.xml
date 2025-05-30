@@ -17,6 +17,7 @@
         <module>framework/danby-spring-boot-starter-biz-context</module>
         <module>framework/danby-spring-boot-starter-biz-context</module>
         <module>oss</module>
+        <module>user</module>
     </modules>
 
     <properties>
