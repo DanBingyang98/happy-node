@@ -20,12 +20,12 @@ public class SaTokenConfigure {
                 // 鉴权方法：每次访问进入
                 .setAuth(obj -> {
                     SaRouter.match("/**")
-                            .notMatch("/auth/user/login")
+                            .notMatch("/auth/login")
                             .notMatch("/auth/verify/phone")
                             .check(r -> StpUtil.checkLogin());
                     // 权限认证 -- 不同模块, 校验不同权限
-                    SaRouter.match("/auth/user/logout", r -> StpUtil.checkRole("common_user"));
-                    SaRouter.match("/auth/user/logout", r -> StpUtil.checkPermission("app:note:publish"));
+                    SaRouter.match("/auth/logout", r -> StpUtil.checkRole("common_user"));
+                    SaRouter.match("/auth/logout", r -> StpUtil.checkPermission("app:note:publish"));
                     // SaRouter.match("/admin/**", r -> StpUtil.checkPermission("admin"));
                     // SaRouter.match("/goods/**", r -> StpUtil.checkPermission("goods"));
                     // SaRouter.match("/orders/**", r -> StpUtil.checkPermission("orders"));

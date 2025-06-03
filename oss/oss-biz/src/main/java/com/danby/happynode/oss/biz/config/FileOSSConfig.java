@@ -45,10 +45,12 @@ public class FileOSSConfig {
     @Bean
     @ConditionalOnProperty(name = "storage.type", havingValue = "minio")
     public MinioClient minioClient() {
-        return MinioClient.builder()
+        MinioClient minioClient = MinioClient.builder()
                 .endpoint(minioEndpoint)
                 .credentials(minioAccessKey, minioSecretKey)
                 .build();
+
+        return minioClient;
     }
 
     @Bean

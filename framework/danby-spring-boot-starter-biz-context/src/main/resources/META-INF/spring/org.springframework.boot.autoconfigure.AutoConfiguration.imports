@@ -1,1 +1,2 @@
 com.danby.framework.context.config.ContextAutoConfiguration
+com.danby.framework.context.config.FeignContextAutoConfiguration

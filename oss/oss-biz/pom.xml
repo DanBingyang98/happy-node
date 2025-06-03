@@ -70,5 +70,17 @@
             <groupId>org.glassfish.jaxb</groupId>
             <artifactId>jaxb-runtime</artifactId>
         </dependency>
+
+        <!-- 业务接口日志组件 -->
+        <dependency>
+            <groupId>com.danby.happynode</groupId>
+            <artifactId>danby-spring-boot-starter-biz-operationlog</artifactId>
+        </dependency>
+
+        <!-- id上下文 -->
+        <dependency>
+            <groupId>com.danby</groupId>
+            <artifactId>danby-spring-boot-starter-biz-context</artifactId>
+        </dependency>
     </dependencies>
 </project>

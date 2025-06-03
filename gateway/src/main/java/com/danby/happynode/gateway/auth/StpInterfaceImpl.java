@@ -80,7 +80,6 @@ public class StpInterfaceImpl implements StpInterface {
         if (StringUtils.isBlank(userRolesValueStr)) {
             return null;
         }
-        return objectMapper.readValue(userRolesValueStr, new TypeReference<>() {
-        });
+        return objectMapper.readValue(userRolesValueStr, new TypeReference<>() {});
     }
 }

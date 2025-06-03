@@ -8,6 +8,7 @@ import io.minio.http.Method;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
@@ -17,6 +18,9 @@ public class MinioFileStorage implements FileStorage {
 
     @Autowired
     private MinioClient minioClient;
+
+    @Value("${minio.endpoint}")
+    private String minioEndpoint;
 
     @Override
     @SneakyThrows
@@ -49,11 +53,14 @@ public class MinioFileStorage implements FileStorage {
                 .build());
 
         // 返回文件url
-        return minioClient.getPresignedObjectUrl(
+        String presignedObjectUrl = minioClient.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
                         .method(Method.GET)
                         .bucket(bucketName)
                         .object(objectName)
                         .build());
+        String url = String.format("%s/%s/%s", minioEndpoint, bucketName, objectName);
+        log.info("==> 上传文件至 Minio 成功，访问路径: {}", url);
+        return url;
     }
 }
