@@ -1,25 +1,38 @@
 package com.danby.happynode.user.biz.service.impl;
 
 import com.danby.framework.context.holder.LoginUserContextHolder;
+import com.danby.happynode.framework.common.enums.DeleteEnum;
+import com.danby.happynode.framework.common.enums.StatusEnum;
 import com.danby.happynode.framework.common.exception.BusinessException;
 import com.danby.happynode.framework.common.response.Response;
 import com.danby.happynode.framework.common.util.ParamUtils;
+import com.danby.happynode.user.dto.req.FindUserByPhoneReqDTO;
+import com.danby.happynode.user.dto.req.RegisterUserReqDTO;
+import com.danby.happynode.user.biz.constant.RedisKeyConstant;
+import com.danby.happynode.user.biz.constant.RoleConstants;
+import com.danby.happynode.user.biz.domain.dataobject.RoleDO;
 import com.danby.happynode.user.biz.domain.dataobject.UserDO;
+import com.danby.happynode.user.biz.domain.mapper.RoleDOMapper;
 import com.danby.happynode.user.biz.domain.mapper.UserDOMapper;
 import com.danby.happynode.user.biz.enums.ResponseCodeEnum;
 import com.danby.happynode.user.biz.enums.SexEnum;
 import com.danby.happynode.user.biz.model.vo.UpdateUserInfoReqVO;
 import com.danby.happynode.user.biz.rpc.OssRpcService;
 import com.danby.happynode.user.biz.service.UserService;
+import com.danby.happynode.user.dto.req.UpdateUserPasswordReqDTO;
+import com.danby.happynode.user.dto.resp.FindUserByPhoneRespDTO;
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Objects;
 
 @Service
@@ -31,6 +44,12 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private OssRpcService ossRpcService;
+
+    @Autowired
+    private RoleDOMapper roleDOMapper;
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 更新用户信息
@@ -117,5 +136,68 @@ public class UserServiceImpl implements UserService {
             userDOMapper.updateByPrimaryKeySelective(userDO);
         }
         return Response.success();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Response<Long> register(RegisterUserReqDTO registerUserReqDTO) {
+        String phone = registerUserReqDTO.getPhone();
+        UserDO userDO = userDOMapper.selectByPhone(phone);
+        if (Objects.nonNull(userDO)) {
+            return Response.success(userDO.getId());
+        }
+        Long newHappynodeId = redisTemplate.opsForValue().increment(RedisKeyConstant.HAPPYNODE_ID_GENERATOR_KEY);
+
+        UserDO newUserDO = UserDO.builder()
+                .phone(phone)
+                .happynodeId(String.valueOf(newHappynodeId))
+                .nickname("小红薯" + newHappynodeId)
+                .status(StatusEnum.ENABLED.getValue()) // 状态为启用
+                .createTime(LocalDateTime.now())
+                .updateTime(LocalDateTime.now())
+                .isDeleted(DeleteEnum.NO.getValue()) // 逻辑删除
+                .build();
+        userDOMapper.insert(newUserDO);
+        Long userDOId = newUserDO.getId();
+
+        RoleDO roleDO = roleDOMapper.selectByPrimaryKey(RoleConstants.COMMON_USER_ROLE_ID);
+        ArrayList<String> roles = new ArrayList<>(1);
+        roles.add(roleDO.getRoleKey());
+
+        String userRolesKey = RedisKeyConstant.buildUserRoleKey(userDOId);
+        redisTemplate.opsForValue().set(userRolesKey, roles);
+
+        return Response.success(userDOId);
+    }
+
+    @Override
+    public Response<FindUserByPhoneRespDTO> findByPhone(FindUserByPhoneReqDTO findUserByPhoneReqDTO) {
+        String phone = findUserByPhoneReqDTO.getPhone();
+        UserDO userDO = userDOMapper.selectByPhone(phone);
+        if (Objects.isNull(userDO)) {
+            throw new BusinessException(ResponseCodeEnum.USER_NOT_FOUND);
+        } else {
+            FindUserByPhoneRespDTO findUserByPhoneRespDTO = FindUserByPhoneRespDTO.builder()
+                    .id(userDO.getId())
+                    .password(userDO.getPassword())
+                    .build();
+            return Response.success(findUserByPhoneRespDTO);
+        }
+
+
+    }
+
+    @Override
+    public Response<?> updatePassword(UpdateUserPasswordReqDTO updateUserPasswordReqDTO) {
+        Long userId = LoginUserContextHolder.getUserId();
+        String encodePassword = updateUserPasswordReqDTO.getEncodePassword();
+        UserDO userDO = UserDO.builder()
+                .id(userId)
+                .password(encodePassword)
+                .updateTime(LocalDateTime.now())
+                .build();
+        userDOMapper.updateByPrimaryKeySelective(userDO);
+        return Response.success();
+
     }
 }
