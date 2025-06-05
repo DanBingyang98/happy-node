@@ -1,0 +1,20 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.danby</groupId>
+        <artifactId>happy-node</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>happynode-kv</artifactId>
+    <packaging>pom</packaging>
+    <!-- 项目名称 -->
+    <name>${project.artifactId}</name>
+    <!-- 项目描述 -->
+    <description>Key-Value 键值存储服务</description>
+    <modules>
+        <module>happynode-kv-api</module>
+        <module>happynode-kv-biz</module>
+    </modules>
+</project>

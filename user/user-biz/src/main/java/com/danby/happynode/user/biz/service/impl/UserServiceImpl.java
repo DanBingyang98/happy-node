@@ -198,6 +198,5 @@ public class UserServiceImpl implements UserService {
                 .build();
         userDOMapper.updateByPrimaryKeySelective(userDO);
         return Response.success();
-
     }
 }
