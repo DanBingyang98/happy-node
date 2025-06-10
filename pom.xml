@@ -19,6 +19,8 @@
         <module>oss</module>
         <module>user</module>
         <module>happynode-kv</module>
+        <module>happynode-distributed-id-generator</module>
+        <module>happynode-note</module>
     </modules>
 
     <properties>
@@ -229,7 +231,15 @@
                 <artifactId>happynode-kv-api</artifactId>
                 <version>${revision}</version>
             </dependency>
+
+            <dependency>
+                <groupId>com.danby</groupId>
+                <artifactId>happynode-distributed-id-generator-api</artifactId>
+                <version>${revision}</version>
+            </dependency>
         </dependencies>
+
+
     </dependencyManagement>
 
     <build>

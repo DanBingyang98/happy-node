@@ -101,6 +101,11 @@
             <version>7.11.0</version>
             <scope>compile</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.danby</groupId>
+            <artifactId>happynode-distributed-id-generator-api</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

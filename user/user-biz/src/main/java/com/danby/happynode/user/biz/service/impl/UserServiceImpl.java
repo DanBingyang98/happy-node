@@ -6,6 +6,7 @@ import com.danby.happynode.framework.common.enums.StatusEnum;
 import com.danby.happynode.framework.common.exception.BusinessException;
 import com.danby.happynode.framework.common.response.Response;
 import com.danby.happynode.framework.common.util.ParamUtils;
+import com.danby.happynode.user.biz.rpc.DistributedIdGeneratorRpcService;
 import com.danby.happynode.user.dto.req.FindUserByPhoneReqDTO;
 import com.danby.happynode.user.dto.req.RegisterUserReqDTO;
 import com.danby.happynode.user.biz.constant.RedisKeyConstant;
@@ -44,6 +45,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private OssRpcService ossRpcService;
+
+    @Autowired
+    private DistributedIdGeneratorRpcService distributedIdGeneratorRpcService;
 
     @Autowired
     private RoleDOMapper roleDOMapper;
@@ -146,12 +150,15 @@ public class UserServiceImpl implements UserService {
         if (Objects.nonNull(userDO)) {
             return Response.success(userDO.getId());
         }
-        Long newHappynodeId = redisTemplate.opsForValue().increment(RedisKeyConstant.HAPPYNODE_ID_GENERATOR_KEY);
+//        Long newHappynodeId = redisTemplate.opsForValue().increment(RedisKeyConstant.HAPPYNODE_ID_GENERATOR_KEY);
+        String userId = distributedIdGeneratorRpcService.getUserId();
+        String happynodeId = distributedIdGeneratorRpcService.getHappynodeId();
 
         UserDO newUserDO = UserDO.builder()
+                .id(Long.valueOf(userId))
                 .phone(phone)
-                .happynodeId(String.valueOf(newHappynodeId))
-                .nickname("小红薯" + newHappynodeId)
+                .happynodeId(String.valueOf(happynodeId))
+                .nickname("小红薯" + happynodeId)
                 .status(StatusEnum.ENABLED.getValue()) // 状态为启用
                 .createTime(LocalDateTime.now())
                 .updateTime(LocalDateTime.now())

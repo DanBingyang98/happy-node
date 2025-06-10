@@ -15,6 +15,12 @@
     <file url="file://$PROJECT_DIR$/framework/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/gateway/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/gateway/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/happynode-distributed-id-generator/happynode-distributed-id-generator-api/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/happynode-distributed-id-generator/happynode-distributed-id-generator-api/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/happynode-distributed-id-generator/happynode-distributed-id-generator-biz/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/happynode-distributed-id-generator/happynode-distributed-id-generator-biz/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/happynode-distributed-id-generator/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/happynode-distributed-id-generator/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/happynode-kv/happynode-kv-api/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/happynode-kv/happynode-kv-api/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/happynode-kv/happynode-kv-biz/src/main/java" charset="UTF-8" />
