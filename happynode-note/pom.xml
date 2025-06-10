@@ -6,16 +6,15 @@
     <parent>
         <groupId>com.danby</groupId>
         <artifactId>happy-node</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>${revision}</version>
     </parent>
 
     <groupId>com.danby.happynode.note</groupId>
     <artifactId>happynode-note</artifactId>
-
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+    <packaging>pom</packaging>
+    <modules>
+        <module>happynode-note-api</module>
+        <module>happynode-note-biz</module>
+    </modules>
 
 </project>

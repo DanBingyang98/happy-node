@@ -7,7 +7,6 @@ import com.danby.happynode.kv.dto.req.DeleteNoteContentReqDTO;
 import com.danby.happynode.kv.dto.req.FindNoteContentReqDTO;
 import com.danby.happynode.kv.dto.resp.FindNoteContentRespDTO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 

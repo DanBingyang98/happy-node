@@ -1,6 +1,8 @@
 package com.danby.happynode.kv.biz.controller;
 
 import com.danby.happynode.framework.common.response.Response;
+import com.danby.happynode.kv.biz.domain.dataobject.NoteContentDO;
+import com.danby.happynode.kv.biz.domain.repository.NoteContentRepository;
 import com.danby.happynode.kv.biz.service.NoteContentService;
 import com.danby.happynode.kv.dto.req.AddNoteContentReqDTO;
 import com.danby.happynode.kv.dto.req.DeleteNoteContentReqDTO;
@@ -12,6 +14,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/kv")

@@ -11,7 +11,6 @@ import com.danby.happynode.kv.dto.req.DeleteNoteContentReqDTO;
 import com.danby.happynode.kv.dto.req.FindNoteContentReqDTO;
 import com.danby.happynode.kv.dto.resp.FindNoteContentRespDTO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -26,25 +25,25 @@ public class NoteContentServiceImpl implements NoteContentService {
     @Override
     public Response<?> addNoteContent(AddNoteContentReqDTO addNoteContentReqDTO) {
         // 笔记 ID
-        Long noteId = addNoteContentReqDTO.getNoteId();
+        String uuid = addNoteContentReqDTO.getUuid();
         // 笔记内容
         String content = addNoteContentReqDTO.getContent();
         NoteContentDO noteContentDO = NoteContentDO.builder()
-                .id(UUID.randomUUID())  // TODO: 暂时用 UUID, 目的是为了下一章讲解压测，不用动态传笔记 ID。后续改为笔记服务传过来的笔记 ID
+                .id(UUID.fromString(uuid))  // TODO: 暂时用 UUID, 目的是为了下一章讲解压测，不用动态传笔记 ID。后续改为笔记服务传过来的笔记 ID
                 .content(content)
                 .build();
         noteContentRepository.save(noteContentDO);
-        return Response.success(noteContentDO);
+        return Response.success();
     }
 
     @Override
     public Response<FindNoteContentRespDTO> findNoteContent(FindNoteContentReqDTO findNoteContentReqDTO) {
-        String noteId = findNoteContentReqDTO.getNoteId();
-        Optional<NoteContentDO> optional = noteContentRepository.findById(UUID.fromString(noteId));
+        String uuid = findNoteContentReqDTO.getUuid();
+        Optional<NoteContentDO> optional = noteContentRepository.findById(UUID.fromString(uuid));
         if (optional.isPresent()) {
             FindNoteContentRespDTO findNoteContentRespDTO = FindNoteContentRespDTO.builder()
                     .content(optional.get().getContent())
-                    .noteId(optional.get().getId())
+                    .uuid(optional.get().getId())
                     .build();
             return Response.success(findNoteContentRespDTO);
         } else {
@@ -54,8 +53,8 @@ public class NoteContentServiceImpl implements NoteContentService {
 
     @Override
     public Response<?> deleteNoteContent(DeleteNoteContentReqDTO deleteNoteContentReqDTO) {
-        String noteId = deleteNoteContentReqDTO.getNoteId();
-        noteContentRepository.deleteById(UUID.fromString(noteId));
+        String uuid = deleteNoteContentReqDTO.getUuid();
+        noteContentRepository.deleteById(UUID.fromString(uuid));
         return Response.success();
     }
 }
