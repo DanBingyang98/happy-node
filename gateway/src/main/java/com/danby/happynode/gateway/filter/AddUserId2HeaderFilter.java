@@ -58,7 +58,7 @@ public class AddUserId2HeaderFilter implements GlobalFilter {
         String tokenRedisKey = RedisKeyConstants.SA_TOKEN_TOKEN_KEY_PREFIX + token;
         // 查询 Redis, 获取用户 ID
         Object o = redisTemplate.opsForValue().get(tokenRedisKey);
-        Long userId = Long.valueOf(String.valueOf(o));
+        Long.valueOf(String.valueOf(o))
 
         if (Objects.isNull(userId)) {
             // 若没有登录，则直接放行
