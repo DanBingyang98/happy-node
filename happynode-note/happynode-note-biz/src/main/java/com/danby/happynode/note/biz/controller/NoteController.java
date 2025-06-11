@@ -5,6 +5,7 @@ import com.danby.happynode.framework.common.response.Response;
 import com.danby.happynode.note.biz.model.vo.FindNoteDetailReqVO;
 import com.danby.happynode.note.biz.model.vo.FindNoteDetailRespVO;
 import com.danby.happynode.note.biz.model.vo.PublishNoteReqVO;
+import com.danby.happynode.note.biz.model.vo.UpdateNoteReqVO;
 import com.danby.happynode.note.biz.service.NoteService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,5 +32,11 @@ public class NoteController {
     @ApiOperationLog(description = "笔记详情")
     public Response<FindNoteDetailRespVO> findNoteDetail(@Validated @RequestBody FindNoteDetailReqVO findNoteDetailReqVO) {
         return noteService.findNoteDetail(findNoteDetailReqVO);
+    }
+
+    @PostMapping(value = "/update")
+    @ApiOperationLog(description = "笔记修改")
+    public Response<?> updateNote(@Validated @RequestBody UpdateNoteReqVO updateNoteReqVO) {
+        return noteService.updateNote(updateNoteReqVO);
     }
 }
