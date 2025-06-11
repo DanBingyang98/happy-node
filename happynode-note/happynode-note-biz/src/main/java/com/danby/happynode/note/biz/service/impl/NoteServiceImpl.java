@@ -11,10 +11,14 @@ import com.danby.happynode.note.biz.enums.NoteStatusEnum;
 import com.danby.happynode.note.biz.enums.NoteTypeEnum;
 import com.danby.happynode.note.biz.enums.NoteVisibleEnum;
 import com.danby.happynode.note.biz.enums.ResponseCodeEnum;
+import com.danby.happynode.note.biz.model.vo.FindNoteDetailReqVO;
+import com.danby.happynode.note.biz.model.vo.FindNoteDetailRespVO;
 import com.danby.happynode.note.biz.model.vo.PublishNoteReqVO;
 import com.danby.happynode.note.biz.rpc.DistributedIdGeneratorRpcService;
 import com.danby.happynode.note.biz.rpc.KeyValueRpcService;
+import com.danby.happynode.note.biz.rpc.UserRpcService;
 import com.danby.happynode.note.biz.service.NoteService;
+import com.danby.happynode.user.dto.resp.FindUserByIdRespDTO;
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -22,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -38,6 +43,8 @@ public class NoteServiceImpl implements NoteService {
     private DistributedIdGeneratorRpcService distributedIdGeneratorRpcService;
     @Autowired
     private KeyValueRpcService keyValueRpcService;
+    @Autowired
+    private UserRpcService userRpcService;
 
     @Override
     public Response<?> publishNote(PublishNoteReqVO publishNoteReqVO) {
@@ -132,5 +139,59 @@ public class NoteServiceImpl implements NoteService {
             }
         }
         return Response.success();
+    }
+
+    @Override
+    public Response<FindNoteDetailRespVO> findNoteDetail(FindNoteDetailReqVO findNoteDetailReqVO) {
+        Long id = findNoteDetailReqVO.getId();
+        NoteDO noteDO = noteDOMapper.selectByPrimaryKey(id);
+        if (Objects.isNull(noteDO)) {
+            throw new BusinessException(ResponseCodeEnum.NOTE_NOT_FOUND);
+        }
+        // 当前登录用户
+        Long userId = LoginUserContextHolder.getUserId();
+        // 校验笔记的可见性
+        if (Objects.equals(noteDO.getVisible(), NoteVisibleEnum.PRIVATE.getCode())
+                && !Objects.equals(noteDO.getCreatorId(), userId)) {
+            throw new BusinessException(ResponseCodeEnum.NOTE_PRIVATE);
+        }
+
+        // RPC: 调用用户服务
+        Long creatorId = noteDO.getCreatorId();
+        FindUserByIdRespDTO findUserByIdRespDTO = userRpcService.findById(creatorId);
+
+
+        // RPC: 调用 K-V 存储服务获取内容
+        String content = null;
+        if (!noteDO.getIsContentEmpty()) {
+            content = keyValueRpcService.findNoteContent(noteDO.getContentUuid());
+        }
+
+        // 笔记类型
+        Integer type = noteDO.getType();
+        // 图文笔记图片链接(字符串)
+        String imgUrisStr = noteDO.getImgUris();
+        // 图文笔记图片链接(集合)
+        List<String> imgUris = null;
+        // 如果查询的是图文笔记，需要将图片链接的逗号分隔开，转换成集合
+        if (Objects.equals(type, NoteTypeEnum.IMAGE_TEXT.getCode()) && StringUtils.isNotBlank(imgUrisStr)) {
+            imgUris = Arrays.asList(imgUrisStr.split(","));
+        }
+        FindNoteDetailRespVO findNoteDetailRespVO = FindNoteDetailRespVO.builder()
+                .id(id)
+                .type(type)
+                .title(noteDO.getTitle())
+                .content(content)
+                .imgUris(imgUris)
+                .topicId(noteDO.getTopicId())
+                .topicName(noteDO.getTopicName())
+                .creatorId(noteDO.getCreatorId())
+                .creatorName(findUserByIdRespDTO.getNickName())
+                .avatar(findUserByIdRespDTO.getAvatar())
+                .videoUri(noteDO.getVideoUri())
+                .updateTime(noteDO.getUpdateTime())
+                .visible(noteDO.getVisible())
+                .build();
+        return Response.success(findNoteDetailRespVO);
     }
 }

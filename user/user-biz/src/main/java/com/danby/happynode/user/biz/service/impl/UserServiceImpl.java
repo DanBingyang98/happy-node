@@ -1,14 +1,13 @@
 package com.danby.happynode.user.biz.service.impl;
 
+import cn.hutool.core.util.RandomUtil;
 import com.danby.framework.context.holder.LoginUserContextHolder;
 import com.danby.happynode.framework.common.enums.DeleteEnum;
 import com.danby.happynode.framework.common.enums.StatusEnum;
 import com.danby.happynode.framework.common.exception.BusinessException;
 import com.danby.happynode.framework.common.response.Response;
+import com.danby.happynode.framework.common.util.JsonUtils;
 import com.danby.happynode.framework.common.util.ParamUtils;
-import com.danby.happynode.user.biz.rpc.DistributedIdGeneratorRpcService;
-import com.danby.happynode.user.dto.req.FindUserByPhoneReqDTO;
-import com.danby.happynode.user.dto.req.RegisterUserReqDTO;
 import com.danby.happynode.user.biz.constant.RedisKeyConstant;
 import com.danby.happynode.user.biz.constant.RoleConstants;
 import com.danby.happynode.user.biz.domain.dataobject.RoleDO;
@@ -18,15 +17,23 @@ import com.danby.happynode.user.biz.domain.mapper.UserDOMapper;
 import com.danby.happynode.user.biz.enums.ResponseCodeEnum;
 import com.danby.happynode.user.biz.enums.SexEnum;
 import com.danby.happynode.user.biz.model.vo.UpdateUserInfoReqVO;
+import com.danby.happynode.user.biz.rpc.DistributedIdGeneratorRpcService;
 import com.danby.happynode.user.biz.rpc.OssRpcService;
 import com.danby.happynode.user.biz.service.UserService;
+import com.danby.happynode.user.dto.req.FindUserByIdReqDTO;
+import com.danby.happynode.user.dto.req.FindUserByPhoneReqDTO;
+import com.danby.happynode.user.dto.req.RegisterUserReqDTO;
 import com.danby.happynode.user.dto.req.UpdateUserPasswordReqDTO;
+import com.danby.happynode.user.dto.resp.FindUserByIdRespDTO;
 import com.danby.happynode.user.dto.resp.FindUserByPhoneRespDTO;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,6 +42,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -54,6 +62,18 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
+    /**
+     * 用户信息本地缓存
+     */
+    private static final Cache<Long, FindUserByIdRespDTO> LOCAL_CACHE = Caffeine.newBuilder()
+            .initialCapacity(10000) // 设置初始容量为 10000 个条目
+            .maximumSize(10000) // 设置缓存的最大容量为 10000 个条目
+            .expireAfterWrite(1, TimeUnit.HOURS) // 设置缓存条目在写入后 1 小时过期
+            .build();
 
     /**
      * 更新用户信息
@@ -205,5 +225,59 @@ public class UserServiceImpl implements UserService {
                 .build();
         userDOMapper.updateByPrimaryKeySelective(userDO);
         return Response.success();
+    }
+
+    @Override
+    public Response<FindUserByIdRespDTO> findById(FindUserByIdReqDTO findUserByIdReqDTO) {
+        Long id = findUserByIdReqDTO.getId();
+
+        FindUserByIdRespDTO findUserByIdRespDTOLocalCache = LOCAL_CACHE.getIfPresent(id);
+        if (Objects.nonNull(findUserByIdRespDTOLocalCache)) {
+            log.info("==> 命中了本地缓存；{}", findUserByIdRespDTOLocalCache);
+            return Response.success(findUserByIdRespDTOLocalCache);
+        }
+
+        // 用户缓存key
+        String userInfoRedisKey = RedisKeyConstant.buildUserInfoKey(id);
+
+        // 再从 Redis 缓存中查询
+        String userInfoRedisValue = (String) redisTemplate.opsForValue().get(userInfoRedisKey);
+
+        // 若 Redis 缓存中存在该用户信息
+        if (StringUtils.isNotBlank(userInfoRedisValue)) {
+            // 将存储的 Json 字符串转换成对象，并返回
+            FindUserByIdRespDTO findUserByIdRespDTO = JsonUtils.parseObject(userInfoRedisValue, FindUserByIdRespDTO.class);
+            // 异步线程中将用户信息存入本地缓存
+            threadPoolTaskExecutor.submit(() -> {
+                if (Objects.nonNull(findUserByIdRespDTO)) {
+                    LOCAL_CACHE.put(id, findUserByIdRespDTO);
+                }
+            });
+            return Response.success(findUserByIdRespDTO);
+        }
+
+        // 否则, 从数据库中查询
+        // 根据用户 ID 查询用户信息
+        UserDO userDO = userDOMapper.selectByPrimaryKey(id);
+
+        if (Objects.isNull(userDO)) {
+            threadPoolTaskExecutor.execute(() -> {
+                // 防止穿透，将空数据存入redis
+                long expireSeconds = 60 + RandomUtil.randomInt(60);
+                redisTemplate.opsForValue().set(userInfoRedisKey, "null", expireSeconds, TimeUnit.SECONDS);
+            });
+            throw new BusinessException(ResponseCodeEnum.USER_NOT_FOUND);
+        }
+
+        FindUserByIdRespDTO findUserByIdRespDTO = FindUserByIdRespDTO.builder()
+                .id(userDO.getId())
+                .avatar(userDO.getAvatar())
+                .nickName(userDO.getNickname())
+                .build();
+        threadPoolTaskExecutor.submit(() -> {
+            long expireSeconds = 60 * 60 * 24 + RandomUtil.randomInt(60 * 60 * 24);
+            redisTemplate.opsForValue().set(userInfoRedisKey, JsonUtils.toJsonString(findUserByIdRespDTO), expireSeconds, TimeUnit.SECONDS);
+        });
+        return Response.success(findUserByIdRespDTO);
     }
 }

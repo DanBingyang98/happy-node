@@ -2,9 +2,11 @@ package com.danby.happynode.user.api;
 
 import com.danby.happynode.framework.common.response.Response;
 import com.danby.happynode.user.constant.UserApiConstants;
+import com.danby.happynode.user.dto.req.FindUserByIdReqDTO;
 import com.danby.happynode.user.dto.req.FindUserByPhoneReqDTO;
 import com.danby.happynode.user.dto.req.RegisterUserReqDTO;
 import com.danby.happynode.user.dto.req.UpdateUserPasswordReqDTO;
+import com.danby.happynode.user.dto.resp.FindUserByIdRespDTO;
 import com.danby.happynode.user.dto.resp.FindUserByPhoneRespDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
@@ -39,4 +41,13 @@ public interface UserServiceFeign {
      */
     @PostMapping("/updatePassword")
     Response<?> updatePassword(@Validated @RequestBody UpdateUserPasswordReqDTO updateUserPasswordReqDTO);
+
+    /**
+     * 根据用户 ID 查询用户信息
+     *
+     * @param findUserByIdReqDTO
+     * @return
+     */
+    @PostMapping("/findById")
+    Response<FindUserByIdRespDTO> findById(@Validated @RequestBody FindUserByIdReqDTO findUserByIdReqDTO);
 }

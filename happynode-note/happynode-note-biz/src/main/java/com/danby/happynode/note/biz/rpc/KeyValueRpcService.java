@@ -4,6 +4,8 @@ import com.danby.happynode.framework.common.response.Response;
 import com.danby.happynode.kv.dto.api.KeyValueFeign;
 import com.danby.happynode.kv.dto.req.AddNoteContentReqDTO;
 import com.danby.happynode.kv.dto.req.DeleteNoteContentReqDTO;
+import com.danby.happynode.kv.dto.req.FindNoteContentReqDTO;
+import com.danby.happynode.kv.dto.resp.FindNoteContentRespDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -48,5 +50,22 @@ public class KeyValueRpcService {
             return false;
         }
         return true;
+    }
+
+    /**
+     * 查询笔记内容
+     *
+     * @param uuid
+     * @return
+     */
+    public String findNoteContent(String uuid) {
+        FindNoteContentReqDTO findNoteContentReqDTO = FindNoteContentReqDTO.builder()
+                .uuid(uuid)
+                .build();
+        Response<FindNoteContentRespDTO> response = keyValueFeign.findNoteContent(findNoteContentReqDTO);
+        if (Objects.isNull(response) || !response.isSuccess() || Objects.isNull(response.getData())) {
+            return null;
+        }
+        return response.getData().getContent();
     }
 }

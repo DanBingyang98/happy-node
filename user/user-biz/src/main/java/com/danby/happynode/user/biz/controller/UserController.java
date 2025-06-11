@@ -2,11 +2,13 @@ package com.danby.happynode.user.biz.controller;
 
 import com.danby.happynode.framework.biz.operationlog.aspect.ApiOperationLog;
 import com.danby.happynode.framework.common.response.Response;
-import com.danby.happynode.user.dto.req.FindUserByPhoneReqDTO;
-import com.danby.happynode.user.dto.req.RegisterUserReqDTO;
 import com.danby.happynode.user.biz.model.vo.UpdateUserInfoReqVO;
 import com.danby.happynode.user.biz.service.UserService;
+import com.danby.happynode.user.dto.req.FindUserByIdReqDTO;
+import com.danby.happynode.user.dto.req.FindUserByPhoneReqDTO;
+import com.danby.happynode.user.dto.req.RegisterUserReqDTO;
 import com.danby.happynode.user.dto.req.UpdateUserPasswordReqDTO;
+import com.danby.happynode.user.dto.resp.FindUserByIdRespDTO;
 import com.danby.happynode.user.dto.resp.FindUserByPhoneRespDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +55,12 @@ public class UserController {
     @ApiOperationLog(description = "密码更新")
     public Response<?> updatePassword(@Validated @RequestBody UpdateUserPasswordReqDTO updateUserPasswordReqDTO) {
         return userService.updatePassword(updateUserPasswordReqDTO);
+    }
+
+    @PostMapping("/findById")
+    @ApiOperationLog(description = "查询用户信息")
+    public Response<FindUserByIdRespDTO> findById(@Validated @RequestBody FindUserByIdReqDTO findUserByIdReqDTO) {
+        return userService.findById(findUserByIdReqDTO);
     }
 
 }

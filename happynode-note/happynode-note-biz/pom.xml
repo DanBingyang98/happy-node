@@ -96,6 +96,11 @@
             <artifactId>danby-spring-boot-starter-biz-context</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.danby.happynode</groupId>
+            <artifactId>user-api</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
