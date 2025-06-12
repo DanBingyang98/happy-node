@@ -107,6 +107,21 @@
             <artifactId>caffeine</artifactId>
         </dependency>
 
+<!--        rocketMQ-->
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-client</artifactId>
+        </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>com.alibaba.cloud</groupId>-->
+<!--            <artifactId>spring-cloud-starter-stream-rocketmq</artifactId>-->
+<!--        </dependency>-->
+
     </dependencies>
 
     <build>

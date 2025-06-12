@@ -6,6 +6,7 @@ import com.danby.framework.context.holder.LoginUserContextHolder;
 import com.danby.happynode.framework.common.exception.BusinessException;
 import com.danby.happynode.framework.common.response.Response;
 import com.danby.happynode.framework.common.util.JsonUtils;
+import com.danby.happynode.note.biz.constant.MQConstants;
 import com.danby.happynode.note.biz.constant.RedisKeyConstants;
 import com.danby.happynode.note.biz.domain.dataobject.NoteDO;
 import com.danby.happynode.note.biz.domain.mapper.NoteDOMapper;
@@ -29,6 +30,7 @@ import com.google.common.base.Preconditions;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -62,6 +64,8 @@ public class NoteServiceImpl implements NoteService {
     private RedisTemplate<String, String> redisTemplate;
     @Autowired
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+    @Autowired
+    private RocketMQTemplate rocketMQTemplate;
 
     private static final Cache<Long, String> LOCAL_CACHE = Caffeine.newBuilder()
             .initialCapacity(10000) // 设置初始容量为 10000 个条目
@@ -341,7 +345,10 @@ public class NoteServiceImpl implements NoteService {
         redisTemplate.delete(noteDetailRedisKey);
 
         // 删除本地缓存
-        LOCAL_CACHE.invalidate(noteId);
+//        LOCAL_CACHE.invalidate(noteId);
+        // 同步发送广播模式 MQ，将所有实例中的本地缓存都删除掉
+        rocketMQTemplate.syncSend(MQConstants.TOPIC_DELETE_NOTE_LOCAL_CACHE, noteId);
+        log.info("====> MQ：删除笔记本地缓存发送成功...");
 
         NoteDO noteDO1 = noteDOMapper.selectByPrimaryKey(noteId);
         String contentUuid = noteDO1.getContentUuid();
