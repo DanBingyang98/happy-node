@@ -1,7 +1,9 @@
 package com.danby.happynode.user.relation.biz.consumer;
 
+import com.danby.happynode.framework.common.util.DateUtils;
 import com.danby.happynode.framework.common.util.JsonUtils;
 import com.danby.happynode.user.relation.biz.constant.MQConstant;
+import com.danby.happynode.user.relation.biz.constant.RedisKeyConstants;
 import com.danby.happynode.user.relation.biz.domain.dataobject.FansDO;
 import com.danby.happynode.user.relation.biz.domain.dataobject.FollowingDO;
 import com.danby.happynode.user.relation.biz.domain.mapper.FansDOMapper;
@@ -13,10 +15,15 @@ import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.scripting.support.ResourceScriptSource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Objects;
 
 @Component
@@ -33,6 +40,8 @@ public class FollowUnfollowConsumer implements RocketMQListener<Message> {
     private TransactionTemplate transactionTemplate;
     @Autowired
     private RateLimiter rateLimiter;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Override
     public void onMessage(Message message) {
@@ -48,6 +57,7 @@ public class FollowUnfollowConsumer implements RocketMQListener<Message> {
             handleFollowTagMessage(bodyJsonStr);
         } else if (Objects.equals(tags, MQConstant.TAG_UNFOLLOW)) { // 取关操作
             // TODO取关操作
+
         }
     }
 
@@ -92,7 +102,17 @@ public class FollowUnfollowConsumer implements RocketMQListener<Message> {
         });
         log.info("## 数据库添加记录结果：{}", transactionResult);
         // TODO: 更新 Redis 中被关注用户的 ZSet 粉丝列表
-
-
+        if (Boolean.TRUE.equals(transactionResult)) {
+            // Lua 脚本
+            DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+            script.setScriptSource(new ResourceScriptSource(new ClassPathResource("/lua/follow_check_and_update_fans_zset.lua")));
+            script.setResultType(Long.class);
+            // 时间戳
+            long timestamp = DateUtils.localDateTime2Timestamp(createTime);
+            // 构建被关注用户的粉丝列表 Redis Key
+            String fansRedisKey = RedisKeyConstants.buildUserFansKey(followUserId);
+            // 执行脚本
+            redisTemplate.execute(script, Collections.singletonList(fansRedisKey), userId, timestamp);
+        }
     }
 }
