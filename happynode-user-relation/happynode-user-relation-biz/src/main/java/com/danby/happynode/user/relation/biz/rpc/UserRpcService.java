@@ -1,0 +1,26 @@
+package com.danby.happynode.user.relation.biz.rpc;
+
+import com.danby.happynode.framework.common.response.Response;
+import com.danby.happynode.user.api.UserServiceFeign;
+import com.danby.happynode.user.dto.req.FindUserByIdReqDTO;
+import com.danby.happynode.user.dto.resp.FindUserByIdRespDTO;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component
+public class UserRpcService {
+    @Autowired
+    private UserServiceFeign userServiceFeign;
+
+    public FindUserByIdRespDTO findById(Long userId) {
+        FindUserByIdReqDTO findUserByIdReqDTO = FindUserByIdReqDTO.builder()
+                .id(userId)
+                .build();
+        Response<FindUserByIdRespDTO> response = userServiceFeign.findById(findUserByIdReqDTO);
+        if (!response.isSuccess() || response.getData() == null) {
+            return null;
+        }
+        return response.getData();
+    }
+
+}

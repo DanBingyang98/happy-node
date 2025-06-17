@@ -1,14 +1,12 @@
 package com.danby.happynode.note.biz.service;
 
 import com.danby.happynode.framework.common.response.Response;
-import com.danby.happynode.note.biz.model.vo.FindNoteDetailReqVO;
-import com.danby.happynode.note.biz.model.vo.FindNoteDetailRespVO;
-import com.danby.happynode.note.biz.model.vo.PublishNoteReqVO;
-import com.danby.happynode.note.biz.model.vo.UpdateNoteReqVO;
+import com.danby.happynode.note.biz.model.vo.*;
 
 public interface NoteService {
     /**
      * 发布笔记
+     *
      * @param publishNoteReqVO
      * @return
      */
@@ -16,6 +14,7 @@ public interface NoteService {
 
     /**
      * 笔记详情
+     *
      * @param findNoteDetailReqVO
      * @return
      */
@@ -23,8 +22,38 @@ public interface NoteService {
 
     /**
      * 笔记更新
+     *
      * @param updateNoteReqVO
      * @return
      */
     Response<?> updateNote(UpdateNoteReqVO updateNoteReqVO);
+
+    /**
+     * 删除本地缓存
+     *
+     * @param noteId
+     * @return
+     */
+    void deleteNoteLocalCache(Long noteId);
+
+    /**
+     * 删除笔记
+     * @param deleteNoteReqVO
+     * @return
+     */
+    Response<?> deleteNote(DeleteNoteReqVO deleteNoteReqVO);
+
+    /**
+     * 笔记仅对自己可见
+     * @param updateNoteVisibleOnlyMeReqVO
+     * @return
+     */
+    Response<?> visibleOnlyMe(UpdateNoteVisibleOnlyMeReqVO updateNoteVisibleOnlyMeReqVO);
+
+    /**
+     * 笔记置顶 / 取消置顶
+     * @param topNoteReqVO
+     * @return
+     */
+    Response<?> topNote(TopNoteReqVO topNoteReqVO);
 }
