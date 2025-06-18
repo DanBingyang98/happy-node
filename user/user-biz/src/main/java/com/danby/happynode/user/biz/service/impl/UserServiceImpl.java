@@ -356,7 +356,7 @@ public class UserServiceImpl implements UserService {
                             // 用户信息缓存 Redis Key
                             String redisKey = RedisKeyConstant.buildUserInfoKey(userId);
                             // DTO 转 JSON 字符串
-                            FindUserByIdRespDTO findUserByIdRespDTO = map.get(redisKey);
+                            FindUserByIdRespDTO findUserByIdRespDTO = map.get(userId);
                             String redisValue = JsonUtils.toJsonString(findUserByIdRespDTO);
                             // 过期时间（保底1天 + 随机秒数，将缓存过期时间打散，防止同一时间大量缓存失效，导致数据库压力太大）
                             long expireSeconds = 60 * 60 * 24 + RandomUtil.randomInt(60 * 60 * 24);
