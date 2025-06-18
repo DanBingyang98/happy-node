@@ -24,4 +24,9 @@ public class FindUserByIdRespDTO {
      * 头像
      */
     private String avatar;
+
+    /**
+     * 简介
+     */
+    private String introduction;
 }

@@ -2,16 +2,15 @@ package com.danby.happynode.user.api;
 
 import com.danby.happynode.framework.common.response.Response;
 import com.danby.happynode.user.constant.UserApiConstants;
-import com.danby.happynode.user.dto.req.FindUserByIdReqDTO;
-import com.danby.happynode.user.dto.req.FindUserByPhoneReqDTO;
-import com.danby.happynode.user.dto.req.RegisterUserReqDTO;
-import com.danby.happynode.user.dto.req.UpdateUserPasswordReqDTO;
+import com.danby.happynode.user.dto.req.*;
 import com.danby.happynode.user.dto.resp.FindUserByIdRespDTO;
 import com.danby.happynode.user.dto.resp.FindUserByPhoneRespDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+
+import java.util.List;
 
 @FeignClient(name = UserApiConstants.SERVICE_NAME, path = UserApiConstants.SERVICE_PATH)
 public interface UserServiceFeign {
@@ -50,4 +49,13 @@ public interface UserServiceFeign {
      */
     @PostMapping("/findById")
     Response<FindUserByIdRespDTO> findById(@Validated @RequestBody FindUserByIdReqDTO findUserByIdReqDTO);
+
+    /**
+     * 批量查询用户信息
+     *
+     * @param findUsersByIdsReqDTO
+     * @return
+     */
+    @PostMapping("/findByIds")
+    Response<List<FindUserByIdRespDTO>> findByIds(@RequestBody FindUsersByIdsReqDTO findUsersByIdsReqDTO);
 }

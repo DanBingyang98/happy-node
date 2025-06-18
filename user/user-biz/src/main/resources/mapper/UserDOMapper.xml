@@ -34,6 +34,14 @@
         FROM t_user
         WHERE phone = #{phone,jdbcType=VARCHAR}
     </select>
+    <select id="selectByIds" parameterType="list" resultMap="BaseResultMap">
+        select id, nickname, avatar, introduction from t_user
+        where status = 0 and is_deleted = 0
+        and id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
         delete
         from t_user
