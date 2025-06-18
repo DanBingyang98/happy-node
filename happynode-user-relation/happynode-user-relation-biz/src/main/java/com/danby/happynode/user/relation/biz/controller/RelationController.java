@@ -3,10 +3,7 @@ package com.danby.happynode.user.relation.biz.controller;
 import com.danby.happynode.framework.biz.operationlog.aspect.ApiOperationLog;
 import com.danby.happynode.framework.common.response.PageResponse;
 import com.danby.happynode.framework.common.response.Response;
-import com.danby.happynode.user.relation.biz.model.vo.FindFollowingListReqVO;
-import com.danby.happynode.user.relation.biz.model.vo.FindFollowingUserRespVO;
-import com.danby.happynode.user.relation.biz.model.vo.FollowUserReqVO;
-import com.danby.happynode.user.relation.biz.model.vo.UnfollowUserReqVO;
+import com.danby.happynode.user.relation.biz.model.vo.*;
 import com.danby.happynode.user.relation.biz.service.RelationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,5 +38,11 @@ public class RelationController {
     @ApiOperationLog(description = "查询用户关注列表")
     public PageResponse<FindFollowingUserRespVO> findFollowingList(@Validated @RequestBody FindFollowingListReqVO findFollowingListReqVO) {
         return relationService.findFollowingList(findFollowingListReqVO);
+    }
+
+    @PostMapping("/fans/list")
+    @ApiOperationLog(description = "查询用户粉丝列表")
+    public PageResponse<FindFansUserRespVO> findFansList(@Validated @RequestBody FindFansListReqVO findFansListReqVO) {
+        return relationService.findFansList(findFansListReqVO);
     }
 }
