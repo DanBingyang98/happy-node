@@ -1,6 +1,7 @@
 package com.danby.happynode.user.relation.biz.domain.mapper;
 
 import com.danby.happynode.user.relation.biz.domain.dataobject.FollowingDO;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -18,4 +19,6 @@ public interface FollowingDOMapper {
     int updateByPrimaryKey(FollowingDO record);
 
     List<FollowingDO> selectByUserId(Long userId);
+
+    int deleteByUserIdAndFollowingUserId(@Param("userId") Long userId, @Param("unfollowUserId") Long unfollowUserId);
 }

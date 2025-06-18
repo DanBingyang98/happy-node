@@ -9,6 +9,7 @@ import com.danby.happynode.user.relation.biz.domain.dataobject.FollowingDO;
 import com.danby.happynode.user.relation.biz.domain.mapper.FansDOMapper;
 import com.danby.happynode.user.relation.biz.domain.mapper.FollowingDOMapper;
 import com.danby.happynode.user.relation.biz.model.dto.FollowUserMqDTO;
+import com.danby.happynode.user.relation.biz.model.dto.UnfollowUserMqDTO;
 import com.google.common.util.concurrent.RateLimiter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.common.message.Message;
@@ -56,8 +57,7 @@ public class FollowUnfollowConsumer implements RocketMQListener<Message> {
         if (Objects.equals(tags, MQConstant.TAG_FOLLOW)) { // 关注操作
             handleFollowTagMessage(bodyJsonStr);
         } else if (Objects.equals(tags, MQConstant.TAG_UNFOLLOW)) { // 取关操作
-            // TODO取关操作
-
+            handleUnFollowTagMessage(bodyJsonStr);
         }
     }
 
@@ -113,6 +113,44 @@ public class FollowUnfollowConsumer implements RocketMQListener<Message> {
             String fansRedisKey = RedisKeyConstants.buildUserFansKey(followUserId);
             // 执行脚本
             redisTemplate.execute(script, Collections.singletonList(fansRedisKey), userId, timestamp);
+        }
+    }
+
+    /**
+     * 取关
+     *
+     * @param bodyJsonStr
+     */
+    private void handleUnFollowTagMessage(String bodyJsonStr) {
+        // 将消息体 Json 字符串转为 DTO 对象
+        UnfollowUserMqDTO followUserMqDTO = JsonUtils.parseObject(bodyJsonStr, UnfollowUserMqDTO.class);
+        if (Objects.isNull(followUserMqDTO)) return;
+        Long unfollowUserId = followUserMqDTO.getUnfollowUserId();
+        Long userId = followUserMqDTO.getUserId();
+        LocalDateTime createTime = followUserMqDTO.getCreateTime();
+        // 编程式提交事务
+        Boolean result = transactionTemplate.execute(status -> {
+            try {
+                // 取关成功需要删除数据库两条记录
+                // 关注表：一条记录
+                int count = followingDOMapper.deleteByUserIdAndFollowingUserId(userId, unfollowUserId);
+                // 粉丝表：一条记录
+                if (count > 0) {
+                    fansDOMapper.deleteByUserIdAndFansUserId(unfollowUserId, userId);
+                }
+                return true;
+            } catch (Exception ex) {
+                status.setRollbackOnly();// 标记事务为回滚
+                log.error("FollowUnfollowConsumer ", ex);
+            }
+            return false;
+        });
+        // 若数据库删除成功，更新 Redis，将自己从被取注用户的 ZSet 粉丝列表删除
+        if (Boolean.TRUE.equals(result)) {
+            // 被取关用户的粉丝列表 Redis Key
+            String userFansKey = RedisKeyConstants.buildUserFansKey(unfollowUserId);
+            // 删除指定粉丝
+            redisTemplate.opsForZSet().remove(userFansKey, userId);
         }
     }
 }

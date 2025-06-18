@@ -3,6 +3,7 @@ package com.danby.happynode.user.relation.biz.controller;
 import com.danby.happynode.framework.biz.operationlog.aspect.ApiOperationLog;
 import com.danby.happynode.framework.common.response.Response;
 import com.danby.happynode.user.relation.biz.model.vo.FollowUserReqVO;
+import com.danby.happynode.user.relation.biz.model.vo.UnfollowUserReqVO;
 import com.danby.happynode.user.relation.biz.service.RelationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,4 +27,9 @@ public class RelationController {
         return relationService.follow(followUserReqVO);
     }
 
+    @PostMapping("/unfollow")
+    @ApiOperationLog(description = "取关用户")
+    public Response<?> unfollow(@Validated @RequestBody UnfollowUserReqVO unfollowUserReqVO) {
+        return relationService.unfollow(unfollowUserReqVO);
+    }
 }
