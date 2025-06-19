@@ -1,6 +1,7 @@
 package com.danby.happynode.count.biz.domain.dataobject;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
