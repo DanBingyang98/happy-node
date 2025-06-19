@@ -80,6 +80,16 @@
       </if>
     </trim>
   </insert>
+  <insert id="insertOrUpdateFansTotalByUserId" parameterType="map">
+    INSERT INTO t_user_count (user_id, fans_total)
+    VALUES (#{userId}, #{count})
+      ON DUPLICATE KEY UPDATE fans_total = fans_total + (#{count});
+    </insert>
+  <insert id="insertOrUpdateFollowingTotalByUserId" parameterType="map">
+    INSERT INTO t_user_count (user_id, following_total)
+    VALUES (#{userId}, #{count})
+      ON DUPLICATE KEY UPDATE following_total = following_total + (#{count});
+  </insert>
   <update id="updateByPrimaryKeySelective" parameterType="com.danby.happynode.count.biz.domain.dataobject.UserCountDO">
     update t_user_count
     <set>

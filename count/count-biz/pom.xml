@@ -93,6 +93,12 @@
             <artifactId>rocketmq-client</artifactId>
             <version>4.9.7</version> <!-- 必须使用 4.9.x 客户端 -->
         </dependency>
+
+        <!-- 快手 Buffer Trigger -->
+        <dependency>
+            <groupId>com.github.phantomthief</groupId>
+            <artifactId>buffer-trigger</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

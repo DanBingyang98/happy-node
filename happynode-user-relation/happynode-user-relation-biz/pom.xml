@@ -23,6 +23,11 @@
             <groupId>com.danby.happynode</groupId>
             <artifactId>danby-spring-boot-starter-biz-operationlog</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- 上下文组件 -->
         <dependency>
             <groupId>com.danby</groupId>
