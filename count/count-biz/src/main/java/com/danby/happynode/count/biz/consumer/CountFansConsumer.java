@@ -35,7 +35,7 @@ public class CountFansConsumer implements RocketMQListener<String> {
     @Autowired
     private RocketMQTemplate rocketMQTemplate;
     @Autowired
-    private RedisTemplate<Object, Object> redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
     private BufferTrigger<String> bufferTrigger = BufferTrigger.<String>batchBlocking()
             .bufferSize(50000) // 缓存队列的最大容量
             .batchSize(1000)   // 一批次最多聚合 1000 条
