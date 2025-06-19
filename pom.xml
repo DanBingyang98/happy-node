@@ -22,6 +22,7 @@
         <module>happynode-distributed-id-generator</module>
         <module>happynode-note</module>
         <module>happynode-user-relation</module>
+        <module>count</module>
     </modules>
 
     <properties>

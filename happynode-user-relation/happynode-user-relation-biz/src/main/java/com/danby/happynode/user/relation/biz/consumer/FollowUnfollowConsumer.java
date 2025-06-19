@@ -28,7 +28,7 @@ import java.util.Collections;
 import java.util.Objects;
 
 @Component
-@RocketMQMessageListener(consumerGroup = "happynode_group", // Group 组
+@RocketMQMessageListener(consumerGroup = "happynode_group" + MQConstant.TOPIC_FOLLOW_OR_UNFOLLOW, // Group 组
         topic = MQConstant.TOPIC_FOLLOW_OR_UNFOLLOW // 消费的 Topic 主题)
 )
 @Slf4j
