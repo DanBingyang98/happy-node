@@ -38,6 +38,7 @@ public interface NoteService {
 
     /**
      * 删除笔记
+     *
      * @param deleteNoteReqVO
      * @return
      */
@@ -45,6 +46,7 @@ public interface NoteService {
 
     /**
      * 笔记仅对自己可见
+     *
      * @param updateNoteVisibleOnlyMeReqVO
      * @return
      */
@@ -52,6 +54,7 @@ public interface NoteService {
 
     /**
      * 笔记置顶 / 取消置顶
+     *
      * @param topNoteReqVO
      * @return
      */
@@ -59,8 +62,18 @@ public interface NoteService {
 
     /**
      * 点赞笔记
+     *
      * @param likeNoteReqVO
      * @return
      */
     Response<?> likeNote(LikeNoteReqVO likeNoteReqVO);
+
+    /**
+     * 取消点赞笔记
+     *
+     * @param unlikeNoteReqVO
+     * @return
+     */
+    Response<?> unlikeNote(UnlikeNoteReqVO unlikeNoteReqVO);
+
 }
