@@ -41,9 +41,9 @@ public class LikeUnlikeNoteConsumer implements RocketMQListener<Message> {
         String tags = message.getTags();
         log.info("==> LikeUnlikeNoteConsumer 消费了消息 {}, tags: {}", bodyJsonStr, tags);
         // 根据 MQ 标签，判断操作类型
-        if (Objects.equals(tags,MQConstants.TAG_LIKE)) { // 点赞笔记
+        if (Objects.equals(tags, MQConstants.TAG_LIKE)) { // 点赞笔记
             handleLikeNoteTagMessage(bodyJsonStr);
-        } else if (Objects.equals(tags,MQConstants.TAG_UNLIKE)) { // 取消点赞笔记
+        } else if (Objects.equals(tags, MQConstants.TAG_UNLIKE)) { // 取消点赞笔记
             handleUnlikeNoteTagMessage(bodyJsonStr);
         }
 
@@ -51,9 +51,10 @@ public class LikeUnlikeNoteConsumer implements RocketMQListener<Message> {
 
     /**
      * 笔记点赞
+     *
      * @param bodyJsonStr
      */
-    private void handleUnlikeNoteTagMessage(String bodyJsonStr) {
+    private void handleLikeNoteTagMessage(String bodyJsonStr) {
         LikeUnlikeNoteMqDTO likeNoteMqDTO = JsonUtils.parseObject(bodyJsonStr, LikeUnlikeNoteMqDTO.class);
         if (Objects.isNull(likeNoteMqDTO)) return;
         // 用户Id
@@ -64,7 +65,6 @@ public class LikeUnlikeNoteConsumer implements RocketMQListener<Message> {
         Integer type = likeNoteMqDTO.getType();
         // 点赞时间
         LocalDateTime createTime = likeNoteMqDTO.getCreateTime();
-
         // 构建 DO 对象
         NoteLikeDO noteLikeDO = NoteLikeDO.builder()
                 .userId(userId)
@@ -72,16 +72,33 @@ public class LikeUnlikeNoteConsumer implements RocketMQListener<Message> {
                 .createTime(createTime)
                 .status(type)
                 .build();
-
         // 添加或更新笔记点赞记录
         int count = noteLikeDOMapper.insertOrUpdate(noteLikeDO);
         // TODO: 发送计数 MQ
     }
+
+
     /**
      * 笔记取消点赞
+     *
      * @param bodyJsonStr
      */
-    private void handleLikeNoteTagMessage(String bodyJsonStr) {
-        
+    private void handleUnlikeNoteTagMessage(String bodyJsonStr) {
+        LikeUnlikeNoteMqDTO likeUnlikeNoteMqDTO = JsonUtils.parseObject(bodyJsonStr, LikeUnlikeNoteMqDTO.class);
+        if (Objects.isNull(likeUnlikeNoteMqDTO)) return;
+        Long userId = likeUnlikeNoteMqDTO.getUserId();
+        Long noteId = likeUnlikeNoteMqDTO.getNoteId();
+        Integer type = likeUnlikeNoteMqDTO.getType();
+        LocalDateTime createTime = likeUnlikeNoteMqDTO.getCreateTime();
+        // 构建 DO 对象
+        NoteLikeDO noteLikeDO = NoteLikeDO.builder()
+                .userId(userId)
+                .noteId(noteId)
+                .createTime(createTime)
+                .status(type)
+                .build();
+        // 取消点赞：记录更新
+        int count = noteLikeDOMapper.update2UnlikeByUserIdAndNoteId(noteLikeDO);
+        // TODO: 发送计数 MQ
     }
 }
