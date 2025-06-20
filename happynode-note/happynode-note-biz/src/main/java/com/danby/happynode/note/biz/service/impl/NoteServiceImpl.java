@@ -624,6 +624,46 @@ public class NoteServiceImpl implements NoteService {
         return Response.success();
     }
 
+    @Override
+    public Response<?> unlikeNote(UnlikeNoteReqVO unlikeNoteReqVO) {
+        // 笔记ID
+        Long noteId = unlikeNoteReqVO.getId();
+
+        // 1. 校验笔记是否真实存在
+        checkNoteExist(noteId);
+        // TODO: 2. 校验笔记是否被点赞过
+        // 用户id
+        Long userId = LoginUserContextHolder.getUserId();
+        // 布隆过滤器 Key
+        String bloomUserNoteLikeListKey = RedisKeyConstants.buildBloomUserNoteLikeListKey(userId);
+        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+        script.setScriptSource(new ResourceScriptSource(new ClassPathResource("/lua/bloom_note_unlike_check.lua")));
+        script.setResultType(Long.class);
+        Long luaResult = redisTemplate.execute(script, Collections.singletonList(bloomUserNoteLikeListKey), noteId);
+        NoteUnlikeLuaResultEnum noteUnlikeLuaResultEnum = NoteUnlikeLuaResultEnum.valueOf(luaResult);
+        switch (noteUnlikeLuaResultEnum) {
+            case NOT_EXIST -> { // 布隆过滤器不存在
+                // 异步初始化布隆过滤器
+                threadPoolTaskExecutor.submit(() -> {
+                    // 保底一天+随机秒数
+                    long expireSecond = 60 * 60 * 24 + RandomUtil.randomInt(60 * 60 * 24);
+                    batchAddNoteLike2BloomAndExpire(userId, expireSecond, bloomUserNoteLikeListKey);
+                });
+                // 从数据库校验笔记是否已被点赞
+                int count = noteLikeDOMapper.selectCountByUserIdAndNoteId(userId, noteId);
+                // 未点赞，无法取消点赞操作，抛出业务异常
+                if (count == 0) throw new BusinessException(ResponseCodeEnum.NOTE_NOT_LIKED);
+            }
+            case NOTE_NOT_LIKED -> throw new BusinessException(ResponseCodeEnum.NOTE_NOT_LIKED);
+        }
+        // 3. 删除 ZSET 中已点赞的笔记 ID
+        String userNoteLikeZSetKey = RedisKeyConstants.buildUserNoteLikeZSetKey(userId);
+        redisTemplate.opsForZSet().remove(userNoteLikeZSetKey, noteId);
+        // TODO: 4. 发送 MQ, 数据更新落库
+
+        return Response.success();
+    }
+
     /**
      * 异步初始化布隆过滤器
      *
