@@ -44,6 +44,5 @@ public class CountNoteLike2DBConsumer implements RocketMQListener<String> {
                 noteCountDOMapper.insertOrUpdateLikeTotalByNoteId(count, noteId)
             );
         }
-
     }
 }

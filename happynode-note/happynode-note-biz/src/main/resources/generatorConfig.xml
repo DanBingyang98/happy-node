@@ -74,7 +74,7 @@
 <!--               enableDeleteByExample="false"-->
 <!--               enableSelectByExample="false"-->
 <!--               selectByExampleQueryId="false"/>-->
-        <table tableName="t_note_like" domainObjectName="NoteLikeDO"
+        <table tableName="t_note_collection" domainObjectName="NoteCollectionDO"
                enableCountByExample="false"
                enableUpdateByExample="false"
                enableDeleteByExample="false"
