@@ -1,4 +1,4 @@
-package com.danby.happynode.note.biz.model.dto;
+package com.danby.happynode.count.biz.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CollectUnCollectNoteMqDTO {
+public class CountCollectUnCollectNoteMqDTO {
     private Long userId;
 
     private Long noteId;
