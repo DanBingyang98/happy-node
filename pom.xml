@@ -23,6 +23,8 @@
         <module>happynode-note</module>
         <module>happynode-user-relation</module>
         <module>count</module>
+        <module>data-align</module>
+        <module>data-align</module>
     </modules>
 
     <properties>
