@@ -109,7 +109,7 @@ public class FollowUnfollowConsumer implements RocketMQListener<Message> {
             return false;
         });
         log.info("## 数据库添加记录结果：{}", transactionResult);
-        // TODO: 更新 Redis 中被关注用户的 ZSet 粉丝列表
+        // 更新 Redis 中被关注用户的 ZSet 粉丝列表
         if (Boolean.TRUE.equals(transactionResult)) {
             // Lua 脚本
             DefaultRedisScript<Long> script = new DefaultRedisScript<>();

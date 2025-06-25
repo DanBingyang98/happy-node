@@ -6,12 +6,14 @@ import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 @Component
+@RefreshScope
 public class CreateTableXxlJob {
 
     @Autowired
@@ -30,7 +32,7 @@ public class CreateTableXxlJob {
     public void createTableJobHandler() throws Exception {
         // 表后缀
         String date = LocalDate.now()
-                .plusDays(1) // 明日的日期
+//                .plusDays(1) // 明日的日期
                 .format(DateTimeFormatter.ofPattern("yyyyMMdd")); // 转字符串
         XxlJobHelper.log("## 开始创建日增量数据表，日期: {}...", date);
 

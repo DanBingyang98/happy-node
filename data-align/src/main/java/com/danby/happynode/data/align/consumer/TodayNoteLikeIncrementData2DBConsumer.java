@@ -3,7 +3,7 @@ package com.danby.happynode.data.align.consumer;
 import com.danby.happynode.data.align.constant.MQConstants;
 import com.danby.happynode.data.align.constant.RedisKeyConstants;
 import com.danby.happynode.data.align.constant.TableConstants;
-import com.danby.happynode.data.align.domain.mapper.InsertRecordMapper;
+import com.danby.happynode.data.align.domain.mapper.InsertMapper;
 import com.danby.happynode.data.align.model.dto.LikeUnlikeNoteMqDTO;
 import com.danby.happynode.framework.common.util.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +35,7 @@ public class TodayNoteLikeIncrementData2DBConsumer implements RocketMQListener<S
     private RedisTemplate<String, Object> redisTemplate;
 
     @Autowired
-    private InsertRecordMapper insertRecordMapper;
+    private InsertMapper insertMapper;
 
     @Autowired
     private TransactionTemplate transactionTemplate;
@@ -51,15 +51,15 @@ public class TodayNoteLikeIncrementData2DBConsumer implements RocketMQListener<S
         log.info("## TodayNoteLikeIncrementData2DBConsumer 消费到了 MQ: {}", body);
         // 消息体 JSON 字符串转 DTO
         LikeUnlikeNoteMqDTO unlikeNoteMqDTO = JsonUtils.parseObject(body, LikeUnlikeNoteMqDTO.class);
+        if (Objects.isNull(unlikeNoteMqDTO)) return;
         // 被点赞、取消点赞的笔记 ID
         Long noteId = unlikeNoteMqDTO.getNoteId();
         // 笔记的发布者 ID
         Long noteCreatorId = unlikeNoteMqDTO.getNoteCreatorId();
-
         // 今日日期
         String date = LocalDate.now()
                 .format(DateTimeFormatter.ofPattern("yyyyMMdd")); // 转字符串
-
+        // 布隆过滤器key
         String bloomKey = RedisKeyConstants.buildBloomUserNoteLikeListKey(date);
         // 1. 布隆过滤器判断该日增量数据是否已经记录
         DefaultRedisScript<Long> script = new DefaultRedisScript<>();
@@ -67,7 +67,6 @@ public class TodayNoteLikeIncrementData2DBConsumer implements RocketMQListener<S
         script.setScriptSource(new ResourceScriptSource(new ClassPathResource("/lua/bloom_today_note_like_check.lua")));
         // 返回值类型
         script.setResultType(Long.class);
-
         // 执行 Lua 脚本，拿到返回结果
         Long result = redisTemplate.execute(script, Collections.singletonList(bloomKey), noteId);
         // 若布隆过滤器判断不存在（绝对正确）
@@ -81,8 +80,8 @@ public class TodayNoteLikeIncrementData2DBConsumer implements RocketMQListener<S
                 try {// 将日增量变更数据，分别写入两张表
                     // - t_data_align_note_like_count_temp_日期_分片序号
                     // - t_data_align_user_like_count_temp_日期_分片序号
-                    insertRecordMapper.insert2DataAlignNoteLikeCountTempTable(TableConstants.buildTableNameSuffix(date, noteIdHashKey), noteId);
-                    insertRecordMapper.insert2DataAlignUserLikeCountTempTable(TableConstants.buildTableNameSuffix(date, userIdHashKey), noteCreatorId);
+                    insertMapper.insert2DataAlignNoteLikeCountTempTable(TableConstants.buildTableNameSuffix(date, noteIdHashKey), noteId);
+                    insertMapper.insert2DataAlignUserLikeCountTempTable(TableConstants.buildTableNameSuffix(date, userIdHashKey), noteCreatorId);
                     return true;
                 } catch (Exception ex) {
                     status.setRollbackOnly(); // 标记事务为回滚

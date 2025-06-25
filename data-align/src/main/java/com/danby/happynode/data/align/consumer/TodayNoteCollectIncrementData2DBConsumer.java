@@ -1,10 +1,28 @@
 package com.danby.happynode.data.align.consumer;
 
 import com.danby.happynode.data.align.constant.MQConstants;
+import com.danby.happynode.data.align.constant.RedisKeyConstants;
+import com.danby.happynode.data.align.constant.TableConstants;
+import com.danby.happynode.data.align.domain.mapper.InsertMapper;
+import com.danby.happynode.data.align.model.dto.CollectUnCollectNoteMqDTO;
+import com.danby.happynode.framework.common.util.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
+import org.springframework.scripting.support.ResourceScriptSource;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionTemplate;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.Objects;
 
 @Component
 @RocketMQMessageListener(consumerGroup = "happynode_group_data_align_" + MQConstants.TOPIC_COUNT_NOTE_COLLECT, // Group 组
@@ -13,17 +31,70 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class TodayNoteCollectIncrementData2DBConsumer implements RocketMQListener<String> {
 
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    /**
+     * 表总分片数
+     */
+    @Value("${table.shards}")
+    private int tableShards;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
+
+    @Autowired
+    private InsertMapper insertMapper;
+
     @Override
     public void onMessage(String body) {
         log.info("## TodayNoteCollectIncrementData2DBConsumer 消费到了 MQ: {}", body);
-        // TODO: 1. 布隆过滤器判断该日增量数据是否已经记录
-
-        // TODO: 2. 若无，才会落库，减轻数据库压力
-
-        // 将日增量变更数据，分别写入两张表
-        // - t_data_align_note_collect_count_temp_日期_分片序号
-        // - t_data_align_user_collect_count_temp_日期_分片序号
-
-        // TODO: 3. 数据库写入成功后，再添加布隆过滤器中
+        // 1. 布隆过滤器判断该日增量数据是否已经记录
+        // 将消息体转换成DTO
+        CollectUnCollectNoteMqDTO collectUnCollectNoteMqDTO = JsonUtils.parseObject(body, CollectUnCollectNoteMqDTO.class);
+        // 如果是空的，则返回
+        if (Objects.isNull(collectUnCollectNoteMqDTO)) return;
+        // 获取数据
+        Long noteId = collectUnCollectNoteMqDTO.getNoteId();
+        Long noteCreatorId = collectUnCollectNoteMqDTO.getNoteCreatorId();
+        // 早期存在的数据，不含 noteCreatorId，返回
+        if (Objects.isNull(noteCreatorId)) return;
+        Integer type = collectUnCollectNoteMqDTO.getType();
+        // 获取当前日期
+        String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        // 创建lua脚本
+        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+        // 设置脚本返回值类型
+        script.setResultType(Long.class);
+        // 设置脚本路径
+        script.setScriptSource(new ResourceScriptSource(new ClassPathResource("lua/bloom_today_note_collect_check.lua")));
+        // 获取布隆过滤器key
+        String bloomUserNoteCollectListKey = RedisKeyConstants.buildBloomUserNoteCollectListKey(date);
+        // 执行lua脚本，获取布隆过滤器结果 校验该变更数据是否已经存在(1 表示已存在，0 表示不存在)
+        Long result = redisTemplate.execute(script, Collections.singletonList(bloomUserNoteCollectListKey), noteId);
+        if (Objects.equals(result, 0L)) {
+            // 2. 若无，才会落库，减轻数据库压力
+            // 根据分片总数，取模，分别获取对应的分片序号
+            long userIdHashKey = noteCreatorId % tableShards;
+            long noteIdHashKey = noteId % tableShards;
+            // 编程式事务，保证多语句的原子性
+            transactionTemplate.execute(status -> {
+                try {
+                    // 将日增量变更数据，分别写入两张表
+                    // - t_data_align_note_collect_count_temp_日期_分片序号
+                    // - t_data_align_user_collect_count_temp_日期_分片序号
+                    insertMapper.insert2DataAlignNoteCollectCountTempTable(TableConstants.buildTableNameSuffix(date, noteIdHashKey), noteId);
+                    insertMapper.insert2DataAlignUserCollectCountTempTable(TableConstants.buildTableNameSuffix(date, userIdHashKey), noteCreatorId);
+                    return true;
+                } catch (Exception ex) {
+                    status.setRollbackOnly(); // 标记事务为回滚
+                    log.error("", ex);
+                }
+                return false;
+            });
+            // TODO: 3. 数据库写入成功后，再添加布隆过滤器中
+            RedisScript<Long> bloomAddScript = RedisScript.of("return redis.call('BF.ADD', KEYS[1], ARGV[1])", Long.class);
+            redisTemplate.execute(bloomAddScript, Collections.singletonList(bloomUserNoteCollectListKey), noteId);
+        }
     }
 }
