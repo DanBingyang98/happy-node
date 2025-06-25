@@ -19,72 +19,55 @@ import java.util.List;
 
 @Component
 @Slf4j
-public class FollowingCountShardingXxlJob {
+public class NotePublishCountShardingXxlJob {
 
     @Autowired
     private SelectMapper selectMapper;
     @Autowired
-    private UpdateMapper updateMapper;
-    @Autowired
     private RedisTemplate<String, Object> redisTemplate;
     @Autowired
     private DeleteMapper deleteMapper;
+    @Autowired
+    private UpdateMapper updateMapper;
 
-    /**
-     * 分片广播任务
-     */
-    @XxlJob("followingCountShardingJobHandler")
-    public void followingCountShardingJobHandler() throws Exception {
+    @XxlJob("notePublishCountShardingHandler")
+    public void notePublishCountShardingHandler() {
         // 获取分片参数
         // 分片序号
         int shardIndex = XxlJobHelper.getShardIndex();
         // 分片总数
         int shardTotal = XxlJobHelper.getShardTotal();
 
+        XxlJobHelper.log("=================> 开始定时分片广播任务：对当日发生变更的笔记点赞数进行对齐");
         XxlJobHelper.log("分片参数：当前分片序号 = {}, 总分片数 = {}", shardIndex, shardTotal);
+
         log.info("分片参数：当前分片序号 = {}, 总分片数 = {}", shardIndex, shardTotal);
-        // 表后缀
+        // 表名后缀
         String date = LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String tableNameSuffix = TableConstants.buildTableNameSuffix(date, shardIndex);
-        // 业务逻辑
-        // 1. 分批次查询 t_data_align_following_count_temp_日期_分片序号，如一批次查询 1000 条，直到全部查询完成
-        // 2: 循环这一批发生变更的用户 ID， 对 t_following 关注表执行 count(*) 操作，获取总数
-        // 3: 更新 t_user_count 表, 更新对应 Redis 缓存
-        // 4. 批量物理删除这一批次记录
         // 一批次 1000 条
         int batchSize = 1000;
         // 共对齐了多少条记录，默认为 0
         int processedTotal = 0;
         while (true) {
-            // 1. 分批次查询，如一批次查询 1000 条，直到全部查询完成
-            List<Long> userIds = selectMapper.selectBatchFromDataAlignFollowingCountTempTable(tableNameSuffix, batchSize);
-            // 若记录为空，终止循环
+            List<Long> userIds = selectMapper.selectBatchFromDataAlignNotePublishCountTempTable(tableNameSuffix, batchSize);
             if (CollUtil.isEmpty(userIds)) break;
             userIds.forEach(userId -> {
-                // 2: 循环这一批发生变更的用户 ID， 对 t_following 关注表执行 count(*) 操作，获取总数
-                int followingTotal = selectMapper.selectCountFromFollowingTableByUserId(userId);
-                // 3: 更新 t_user_count 表, 更新对应 Redis 缓存
-                int count = updateMapper.updateUserFollowingTotalByUserId(userId, followingTotal);
-                // 数据库更新成功 更新对应 Redis 缓存
+                int noteTotal = selectMapper.selectCountFromNoteTableByUserId(userId);
+                int count = updateMapper.updateUserNoteTotalByUserId(userId, noteTotal);
                 if (count > 0) {
                     String countUserKey = RedisKeyConstants.buildCountUserKey(userId);
-                    // 判断 Hash 是否存在
                     Boolean hasKey = redisTemplate.hasKey(countUserKey);
-                    // 若存在
                     if (hasKey) {
-                        // 更新 Hash 中的 Field 关注总数
-                        redisTemplate.opsForHash().put(countUserKey, RedisKeyConstants.FIELD_FOLLOWING_TOTAL, followingTotal);
+                        // 更新对应 Redis 缓存
+                        redisTemplate.opsForHash().put(countUserKey, RedisKeyConstants.FIELD_NOTE_TOTAL, noteTotal);
                     }
-
                 }
             });
-            // 4. 批量物理删除这一批次记录
-            deleteMapper.batchDeleteDataAlignFollowingCountTempTable(tableNameSuffix, userIds);
+            deleteMapper.batchDeleteDataAlignNotePublishCountTempTable(tableNameSuffix, userIds);
             // 当前已处理的记录数
             processedTotal += userIds.size();
         }
-        XxlJobHelper.log("=================> 开始定时分片广播任务：对当日发生变更的用户关注数进行对齐，共对齐记录数：{}", processedTotal);
-
-
+        XxlJobHelper.log("=================> 开始定时分片广播任务：对当日发生变更的用户发布笔记数进行对齐，共对齐记录数：{}", processedTotal);
     }
 }

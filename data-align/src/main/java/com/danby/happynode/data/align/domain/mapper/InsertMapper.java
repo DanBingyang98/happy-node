@@ -40,4 +40,6 @@ public interface InsertMapper {
      * 用户粉丝数：计数变更
      */
     void insert2DataAlignUserFansCountTempTable(@Param("tableNameSuffix") String tableNameSuffix, @Param("userId") Long userId);
+
+
 }

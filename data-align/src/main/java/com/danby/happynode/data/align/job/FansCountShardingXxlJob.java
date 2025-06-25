@@ -19,23 +19,21 @@ import java.util.List;
 
 @Component
 @Slf4j
-public class FollowingCountShardingXxlJob {
+public class FansCountShardingXxlJob {
 
     @Autowired
     private SelectMapper selectMapper;
+
     @Autowired
     private UpdateMapper updateMapper;
+
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
     @Autowired
     private DeleteMapper deleteMapper;
 
-    /**
-     * 分片广播任务
-     */
-    @XxlJob("followingCountShardingJobHandler")
-    public void followingCountShardingJobHandler() throws Exception {
-        // 获取分片参数
+    @XxlJob("fansCountShardingJobHandler")
+    public void fansCountShardingJobHandler() throws Exception {// 获取分片参数
         // 分片序号
         int shardIndex = XxlJobHelper.getShardIndex();
         // 分片总数
@@ -46,45 +44,38 @@ public class FollowingCountShardingXxlJob {
         // 表后缀
         String date = LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String tableNameSuffix = TableConstants.buildTableNameSuffix(date, shardIndex);
+
         // 业务逻辑
-        // 1. 分批次查询 t_data_align_following_count_temp_日期_分片序号，如一批次查询 1000 条，直到全部查询完成
-        // 2: 循环这一批发生变更的用户 ID， 对 t_following 关注表执行 count(*) 操作，获取总数
-        // 3: 更新 t_user_count 表, 更新对应 Redis 缓存
+        // 1. 分批次查询 t_data_align_fans_count_temp_日期_分片序号，如一批次查询 1000 条，直到全部查询完成
+        // 2. 循环这一批发生变更的用户 ID， 对 t_fans 关注表执行 count(*) 操作，获取总数
+        // 3. 批量更新 t_user_count 表，并更新对应 Redis 缓存
         // 4. 批量物理删除这一批次记录
-        // 一批次 1000 条
+
+        // 1. 分批次查询 t_data_align_fans_count_temp_日期_分片序号，如一批次查询 1000 条，直到全部查询完成
         int batchSize = 1000;
-        // 共对齐了多少条记录，默认为 0
         int processedTotal = 0;
         while (true) {
-            // 1. 分批次查询，如一批次查询 1000 条，直到全部查询完成
-            List<Long> userIds = selectMapper.selectBatchFromDataAlignFollowingCountTempTable(tableNameSuffix, batchSize);
-            // 若记录为空，终止循环
+            List<Long> userIds = selectMapper.selectBatchFromDataAlignFansCountTempTable(tableNameSuffix, batchSize);
             if (CollUtil.isEmpty(userIds)) break;
+            //2. 循环这一批发生变更的用户 ID， 对 t_fans 关注表执行 count(*) 操作，获取总数
             userIds.forEach(userId -> {
-                // 2: 循环这一批发生变更的用户 ID， 对 t_following 关注表执行 count(*) 操作，获取总数
-                int followingTotal = selectMapper.selectCountFromFollowingTableByUserId(userId);
-                // 3: 更新 t_user_count 表, 更新对应 Redis 缓存
-                int count = updateMapper.updateUserFollowingTotalByUserId(userId, followingTotal);
-                // 数据库更新成功 更新对应 Redis 缓存
+                // 3. 批量更新 t_user_count 表，并更新对应 Redis 缓存
+                int fansTotal = selectMapper.selectCountFromFansTableByUserId(userId);
+                //更新 t_user_count 表
+                int count = updateMapper.updateUserFansTotalByUserId(userId, fansTotal);
                 if (count > 0) {
                     String countUserKey = RedisKeyConstants.buildCountUserKey(userId);
-                    // 判断 Hash 是否存在
                     Boolean hasKey = redisTemplate.hasKey(countUserKey);
-                    // 若存在
                     if (hasKey) {
-                        // 更新 Hash 中的 Field 关注总数
-                        redisTemplate.opsForHash().put(countUserKey, RedisKeyConstants.FIELD_FOLLOWING_TOTAL, followingTotal);
+                        // 更新对应 Redis 缓存
+                        redisTemplate.opsForHash().put(countUserKey, RedisKeyConstants.FIELD_FANS_TOTAL, fansTotal);
                     }
-
                 }
             });
-            // 4. 批量物理删除这一批次记录
-            deleteMapper.batchDeleteDataAlignFollowingCountTempTable(tableNameSuffix, userIds);
-            // 当前已处理的记录数
             processedTotal += userIds.size();
+            // 4. 批量物理删除这一批次记录
+            deleteMapper.batchDeleteDataAlignFansCountTempTable(tableNameSuffix, userIds);
         }
-        XxlJobHelper.log("=================> 开始定时分片广播任务：对当日发生变更的用户关注数进行对齐，共对齐记录数：{}", processedTotal);
-
-
+        XxlJobHelper.log("=================> 结束定时分片广播任务：对当日发生变更的粉丝数进行对齐，共对齐记录数：{}", processedTotal);
     }
 }

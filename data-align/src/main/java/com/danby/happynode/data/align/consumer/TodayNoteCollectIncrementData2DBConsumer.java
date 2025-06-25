@@ -68,33 +68,48 @@ public class TodayNoteCollectIncrementData2DBConsumer implements RocketMQListene
         script.setResultType(Long.class);
         // 设置脚本路径
         script.setScriptSource(new ResourceScriptSource(new ClassPathResource("lua/bloom_today_note_collect_check.lua")));
+        RedisScript<Long> bloomAddScript = RedisScript.of("return redis.call('BF.ADD', KEYS[1], ARGV[1])", Long.class);
+        // ------------------------- 笔记的收藏数变更记录 -------------------------
         // 获取布隆过滤器key
-        String bloomUserNoteCollectListKey = RedisKeyConstants.buildBloomUserNoteCollectListKey(date);
-        // 执行lua脚本，获取布隆过滤器结果 校验该变更数据是否已经存在(1 表示已存在，0 表示不存在)
-        Long result = redisTemplate.execute(script, Collections.singletonList(bloomUserNoteCollectListKey), noteId);
+        String bloomUserNoteCollectNoteIdListKey = RedisKeyConstants.buildBloomUserNoteCollectNoteIdListKey(date);
+        // 执行lua脚本，获取布隆过滤器结果 校验笔记收藏后的笔记收藏变更记录是否已经存在(1 表示已存在，0 表示不存在)
+        Long result = redisTemplate.execute(script, Collections.singletonList(bloomUserNoteCollectNoteIdListKey), noteId);
+        if (Objects.equals(result, 0L)) {
+            // 2. 若无，才会落库，减轻数据库压力
+            // 根据分片总数，取模，分别获取对应的分片序号
+            long noteIdHashKey = noteId % tableShards;
+
+            try {
+                // 将笔记收藏笔记日增量变更数据，写入表
+                // - t_data_align_note_collect_count_temp_日期_分片序号
+                insertMapper.insert2DataAlignNoteCollectCountTempTable(TableConstants.buildTableNameSuffix(date, noteIdHashKey), noteId);
+            } catch (Exception ex) {
+                log.error("", ex);
+            }
+
+            // 3. 数据库写入成功后，再添加布隆过滤器中
+            redisTemplate.execute(bloomAddScript, Collections.singletonList(bloomUserNoteCollectNoteIdListKey), noteId);
+        }
+        // ------------------------- 用户的收藏数变更记录 -------------------------
+        String bloomUserNoteCollectUserIdListKey = RedisKeyConstants.buildBloomUserNoteCollectUserIdListKey(date);
+        // 执行lua脚本，获取布隆过滤器结果 校验笔记收藏后笔记创作者的收藏记录变更是否已经存在(1 表示已存在，0 表示不存在)
+        result = redisTemplate.execute(script, Collections.singletonList(bloomUserNoteCollectUserIdListKey), noteCreatorId);
         if (Objects.equals(result, 0L)) {
             // 2. 若无，才会落库，减轻数据库压力
             // 根据分片总数，取模，分别获取对应的分片序号
             long userIdHashKey = noteCreatorId % tableShards;
-            long noteIdHashKey = noteId % tableShards;
-            // 编程式事务，保证多语句的原子性
-            transactionTemplate.execute(status -> {
-                try {
-                    // 将日增量变更数据，分别写入两张表
-                    // - t_data_align_note_collect_count_temp_日期_分片序号
-                    // - t_data_align_user_collect_count_temp_日期_分片序号
-                    insertMapper.insert2DataAlignNoteCollectCountTempTable(TableConstants.buildTableNameSuffix(date, noteIdHashKey), noteId);
-                    insertMapper.insert2DataAlignUserCollectCountTempTable(TableConstants.buildTableNameSuffix(date, userIdHashKey), noteCreatorId);
-                    return true;
-                } catch (Exception ex) {
-                    status.setRollbackOnly(); // 标记事务为回滚
-                    log.error("", ex);
-                }
-                return false;
-            });
-            // TODO: 3. 数据库写入成功后，再添加布隆过滤器中
-            RedisScript<Long> bloomAddScript = RedisScript.of("return redis.call('BF.ADD', KEYS[1], ARGV[1])", Long.class);
-            redisTemplate.execute(bloomAddScript, Collections.singletonList(bloomUserNoteCollectListKey), noteId);
+            try {
+                // 将笔记收藏用户日增量变更数据，写入表
+                // - t_data_align_user_collect_count_temp_日期_分片序号
+                insertMapper.insert2DataAlignUserCollectCountTempTable(TableConstants.buildTableNameSuffix(date, userIdHashKey), noteCreatorId);
+
+            } catch (Exception ex) {
+                log.error("", ex);
+            }
+            // 3. 数据库写入成功后，再添加布隆过滤器中
+            redisTemplate.execute(bloomAddScript, Collections.singletonList(bloomUserNoteCollectUserIdListKey), noteCreatorId);
+
         }
+
     }
 }
