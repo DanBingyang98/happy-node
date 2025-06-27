@@ -38,5 +38,10 @@ public class SearchUserRespVO {
     /**
      * 粉丝总数
      */
-    private Integer fansTotal;
+    private String fansTotal;
+
+    /**
+     * 昵称：关键词高亮
+     */
+    private String highlightNickname;
 }

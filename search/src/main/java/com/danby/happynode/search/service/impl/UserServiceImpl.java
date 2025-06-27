@@ -1,6 +1,8 @@
 package com.danby.happynode.search.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.danby.happynode.framework.common.response.PageResponse;
+import com.danby.happynode.framework.common.util.NumberUtils;
 import com.danby.happynode.search.index.UserIndex;
 import com.danby.happynode.search.model.vo.SearchUserReqVO;
 import com.danby.happynode.search.model.vo.SearchUserRespVO;
@@ -15,6 +17,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,7 +81,13 @@ public class UserServiceImpl implements UserService {
         // 将排序信息添加到 SearchRequest
         searchSourceBuilder.from(from);
         searchSourceBuilder.size(pageSize);
-        // 1.6 将构建的查询条件设置到 SearchRequest 中
+        // 1.6 创建高亮字段
+        HighlightBuilder highlightBuilder = new HighlightBuilder();
+        highlightBuilder.field(UserIndex.FIELD_USER_NICKNAME)
+                .preTags("<strong>")
+                .postTags("</strong>");
+        searchSourceBuilder.highlighter(highlightBuilder);
+        // 1.7 将构建的查询条件设置到 SearchRequest 中
         searchRequest.source(searchSourceBuilder);
         // 2 定义查询结果
         List<SearchUserRespVO> searchUserRespVOS = null;
@@ -105,14 +114,21 @@ public class UserServiceImpl implements UserService {
                 String happynodeId = (String) sourceAsMap.get(UserIndex.FIELD_USER_HAPPYNODE_ID);
                 Integer noteTotal = (Integer) sourceAsMap.get(UserIndex.FIELD_USER_NOTE_TOTAL);
                 Integer fansTotal = (Integer) sourceAsMap.get(UserIndex.FIELD_USER_FANS_TOTAL);
+                // 提取highLight字段
+                String highlightNickname = null;
+                if (CollUtil.isNotEmpty(hit.getHighlightFields())
+                        && hit.getHighlightFields().containsKey(UserIndex.FIELD_USER_NICKNAME)) {
+                    highlightNickname = hit.getHighlightFields().get(UserIndex.FIELD_USER_NICKNAME).fragments()[0].toString();
+                }
                 // 构建 VO 实体类
                 SearchUserRespVO searchUserRespVO = SearchUserRespVO.builder()
                         .userId(userId)
                         .nickname(nickname)
                         .avatar(avatar)
-                        .fansTotal(fansTotal)
+                        .fansTotal(NumberUtils.formatNumberString(fansTotal))
                         .happynodeId(happynodeId)
                         .noteTotal(noteTotal)
+                        .highlightNickname(highlightNickname)
                         .build();
                 searchUserRespVOS.add(searchUserRespVO);
             }
