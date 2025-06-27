@@ -25,6 +25,7 @@
         <module>count</module>
         <module>data-align</module>
         <module>data-align</module>
+        <module>search</module>
     </modules>
 
     <properties>
@@ -68,6 +69,7 @@
         <rocketmq-client.version>5.3.1</rocketmq-client.version>
         <buffertrigger.version>0.2.21</buffertrigger.version>
         <xxl-job.version>3.1.0</xxl-job.version>
+        <elasticsearch.version>7.3.0</elasticsearch.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -278,6 +280,23 @@
                 <groupId>com.xuxueli</groupId>
                 <artifactId>xxl-job-core</artifactId>
                 <version>${xxl-job.version}</version>
+            </dependency>
+
+            <!-- Elasticsearch 分布式搜索引擎 -->
+            <dependency>
+                <groupId>org.elasticsearch.client</groupId>
+                <artifactId>elasticsearch-rest-high-level-client</artifactId>
+                <version>${elasticsearch.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.elasticsearch.client</groupId>
+                <artifactId>elasticsearch-rest-client</artifactId>
+                <version>${elasticsearch.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.elasticsearch</groupId>
+                <artifactId>elasticsearch</artifactId>
+                <version>${elasticsearch.version}</version>
             </dependency>
 
         </dependencies>

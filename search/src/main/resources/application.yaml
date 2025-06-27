@@ -1,0 +1,30 @@
+server:
+  port: 8092 # 项目启动的端口
+spring:
+  profiles:
+    active: dev # 默认激活 dev 本地开发环境
+  application:
+    name: happynode-search
+  cloud:
+    nacos:
+      server-addr: 10.0.0.204:8848
+      username: nacos
+      password: nacos
+      config:
+        file-extension: yaml
+        namespace: happynode
+        group: search
+      discovery:
+        namespace: happynode
+        group: default
+  config:
+    import:
+      - nacos:happynode-search-dev?refreshEnabled=true  # 自动加载 happynode-auth-dev.yaml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh   # 开放 refresh 端点
+logging:
+  level:
+    com.alibaba.cloud.nacos.configdata: debug
