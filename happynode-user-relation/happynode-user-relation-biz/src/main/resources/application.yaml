@@ -12,14 +12,17 @@ spring:
       password: nacos
       config:
         file-extension: yaml
-        namespace: happynode
-        group: user-relation
+        namespace: 1c1ad03a-6534-4baf-9f4d-de1d36b791db
+        refresh-enabled: true
       discovery:
-        namespace: happynode
+        namespace: 1c1ad03a-6534-4baf-9f4d-de1d36b791db
         group: default
   config:
     import:
-      - nacos:happynode-user-relation-dev?refreshEnabled=true  # 自动加载 happynode-auth-dev.yaml
+      - nacos:happynode-user-relation-dev?group=user-relation
+      - nacos:happynode-redis?group=common
+      - nacos:happynode-database?group=common
+      - nacos:happynode-rocketmq?group=common
 management:
   endpoints:
     web:
@@ -28,3 +31,7 @@ management:
 logging:
   level:
     com.alibaba.cloud.nacos.configdata: debug
+    com.danby.happynode.user.relation.biz.domain.mapper: debug
+mybatis:
+  type-aliases-package: com.danby.happynode.user.relation.biz.domain.dataobject
+  mapper-locations: classpath:mapper/**/*.xml

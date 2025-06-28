@@ -4,7 +4,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
-import org.springframework.context.ConfigurableApplicationContext;
 
 @SpringBootApplication
 @EnableDiscoveryClient
@@ -12,9 +11,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 public class AuthApplication {
 
     public static void main(String[] args) {
-        ConfigurableApplicationContext applicationContext = SpringApplication.run(AuthApplication.class, args);
-        String property = applicationContext.getEnvironment().getProperty("alarm.type");
-        System.out.println("property = " + property);
+        SpringApplication.run(AuthApplication.class, args);
     }
 
 }

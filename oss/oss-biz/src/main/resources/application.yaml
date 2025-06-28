@@ -12,14 +12,14 @@ spring:
       password: nacos
       config:
         file-extension: yaml
-        namespace: happynode
-        group: oss
+        namespace: 1c1ad03a-6534-4baf-9f4d-de1d36b791db
+        refresh-enabled: true
       discovery:
-        namespace: happynode
+        namespace: 1c1ad03a-6534-4baf-9f4d-de1d36b791db
         group: default
   config:
     import:
-      - nacos:happynode-oss-dev?refreshEnabled=true  # 自动加载 happynode-auth-dev.yaml
+      - nacos:happynode-oss-dev?group=oss
 management:
   endpoints:
     web:

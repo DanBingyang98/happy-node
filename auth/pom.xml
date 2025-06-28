@@ -136,6 +136,12 @@
             <groupId>com.danby.happynode</groupId>
             <artifactId>user-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+            <version>1.2.23</version>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
 

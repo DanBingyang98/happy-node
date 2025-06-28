@@ -13,22 +13,23 @@ spring:
       discovery:
         enabled: true # 启用服务发现
         group: default # 所属组
-        namespace: happynode # 命名空间
+        namespace: 1c1ad03a-6534-4baf-9f4d-de1d36b791db # 命名空间
         server-addr: 10.0.0.204:8848 # Nacos 服务器地址
       config:
         file-extension: yaml
-        namespace: happynode
-        group: gateway
+        namespace: 1c1ad03a-6534-4baf-9f4d-de1d36b791db
+        refresh-enabled: true
   config:
     import:
-      - nacos:happynode-gateway-dev?refreshEnabled=true  # 自动加载 happynode-gateway-dev.yaml
-  jackson:
-    constructor-detector:
-#    gateway:
-#      routes:
-#        - id: auth
-#          uri: lb://happynode-auth
-#          predicates:
-#            - Path=/auth/**
-#          filters:
-#            - StripPrefix=1
+      - nacos:happynode-redis?group=common
+      - nacos:happynode-sa-token?group=common
+      - nacos:happynode-gateway-dev?group=gateway
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh   # 开放 refresh 端点
+logging:
+  level:
+    com.alibaba.cloud.nacos.configdata: debug
+

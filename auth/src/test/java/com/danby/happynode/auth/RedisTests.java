@@ -20,7 +20,7 @@ public class RedisTests {
     void testSetKeyValue() {
         // 添加一个 key 为 name, value 值为 Danby set verification_code:15112344321 "123321"
         //set verification_code:15167896789 112233
-        redisTemplate.opsForValue().set("verification_code:15167896789", "112233");
+        redisTemplate.opsForValue().set("name", "112233");
     }
 
     /**

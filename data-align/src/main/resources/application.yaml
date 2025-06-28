@@ -12,19 +12,27 @@ spring:
       password: nacos
       config:
         file-extension: yaml
-        namespace: happynode
-        group: data-align
+        refresh-enabled: true # 启用动态刷新
+        namespace: 1c1ad03a-6534-4baf-9f4d-de1d36b791db
       discovery:
-        namespace: happynode
+        namespace: 1c1ad03a-6534-4baf-9f4d-de1d36b791db
         group: default
   config:
     import:
-      - nacos:happynode-data-align-dev?refreshEnabled=true  # 自动加载 happynode-auth-dev.yaml
+      - nacos:happynode-database?group=common
+      - nacos:happynode-redis?group=common
+      - nacos:happynode-xxl?group=common
+      - nacos:happynode-rocketmq?group=common
+      - nacos:happynode-data-align-dev?group=data-align
 management:
   endpoints:
     web:
       exposure:
         include: refresh   # 开放 refresh 端点
-#logging:
-#  level:
-#    com.alibaba.cloud.nacos.configdata: debug
+logging:
+  level:
+    com.alibaba.cloud.nacos.configdata: debug
+    com.danby.happynode.data.align.domain.mapper: debug
+mybatis:
+  type-aliases-package: com.danby.happynode.data.align.domain.dataobject
+  mapper-locations: classpath:mapper/**/*.xml
