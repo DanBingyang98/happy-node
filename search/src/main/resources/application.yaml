@@ -19,6 +19,7 @@ spring:
         group: default
   config:
     import:
+      - nacos:happynode-database?group=common
       - nacos:happynode-search-dev?group=search
 management:
   endpoints:
@@ -28,3 +29,6 @@ management:
 logging:
   level:
     com.alibaba.cloud.nacos.configdata: debug
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.danby.happynode.search.domain.dataobject
