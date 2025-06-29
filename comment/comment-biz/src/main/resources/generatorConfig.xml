@@ -80,7 +80,7 @@
 <!--               enableDeleteByExample="false"-->
 <!--               enableSelectByExample="false"-->
 <!--               selectByExampleQueryId="false"/>-->
-        <table tableName="t_comment" domainObjectName="CommentDO"
+        <table tableName="t_comment_like" domainObjectName="CommentLikeDO"
                enableCountByExample="false"
                enableUpdateByExample="false"
                enableDeleteByExample="false"
