@@ -53,6 +53,10 @@
     <file url="file://$PROJECT_DIR$/oss/oss-biz/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/oss/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/oss/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/search/search-api/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/search/search-api/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/search/search-biz/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/search/search-biz/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/search/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/search/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />

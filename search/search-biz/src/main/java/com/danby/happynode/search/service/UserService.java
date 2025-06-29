@@ -1,6 +1,8 @@
 package com.danby.happynode.search.service;
 
 import com.danby.happynode.framework.common.response.PageResponse;
+import com.danby.happynode.framework.common.response.Response;
+import com.danby.happynode.search.dto.RebuildUserDocumentReqDTO;
 import com.danby.happynode.search.model.vo.SearchUserReqVO;
 import com.danby.happynode.search.model.vo.SearchUserRespVO;
 
@@ -11,4 +13,11 @@ public interface UserService {
      * @return
      */
     PageResponse<SearchUserRespVO> searchUser(SearchUserReqVO searchUserReqVO);
+
+    /**
+     * 重建用户文档
+     * @param rebuildUserDocumentReqDTO
+     * @return
+     */
+    Response<Long> rebuildDocument(RebuildUserDocumentReqDTO rebuildUserDocumentReqDTO);
 }

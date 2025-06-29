@@ -5,6 +5,7 @@ import com.danby.happynode.data.align.constant.TableConstants;
 import com.danby.happynode.data.align.domain.mapper.DeleteMapper;
 import com.danby.happynode.data.align.domain.mapper.SelectMapper;
 import com.danby.happynode.data.align.domain.mapper.UpdateMapper;
+import com.danby.happynode.data.align.rpc.SearchRpcService;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,8 @@ public class NoteLikeCountShardingXxlJob {
     private DeleteMapper deleteMapper;
     @Autowired
     private UpdateMapper updateMapper;
+    @Autowired
+    private SearchRpcService searchRpcService;
 
     /**
      * 分片广播任务
@@ -74,6 +77,8 @@ public class NoteLikeCountShardingXxlJob {
                         redisTemplate.opsForHash().put(countNoteKey, RedisKeyConstants.FIELD_LIKE_TOTAL, likeTotal);
                     }
                 }
+                // 远程RPC，调用搜索服务，重构笔记文档
+                searchRpcService.rebuildNoteDocument(noteId);
             });
             // 4. 批量物理删除这一批次记录
             deleteMapper.batchDeleteDataAlignNoteLikeCountTempTable(tableNameSuffix, noteIdList);

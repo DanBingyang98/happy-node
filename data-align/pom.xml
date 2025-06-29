@@ -93,5 +93,10 @@
             <artifactId>rocketmq-client</artifactId>
             <version>4.9.7</version> <!-- 必须使用 4.9.x 客户端 -->
         </dependency>
+
+        <dependency>
+            <groupId>com.danby.happynode.search</groupId>
+            <artifactId>search-api</artifactId>
+        </dependency>
     </dependencies>
 </project>

@@ -6,6 +6,7 @@ import com.danby.happynode.data.align.constant.TableConstants;
 import com.danby.happynode.data.align.domain.mapper.DeleteMapper;
 import com.danby.happynode.data.align.domain.mapper.SelectMapper;
 import com.danby.happynode.data.align.domain.mapper.UpdateMapper;
+import com.danby.happynode.data.align.rpc.SearchRpcService;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import lombok.extern.slf4j.Slf4j;
@@ -23,14 +24,14 @@ public class FansCountShardingXxlJob {
 
     @Autowired
     private SelectMapper selectMapper;
-
     @Autowired
     private UpdateMapper updateMapper;
-
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
     @Autowired
     private DeleteMapper deleteMapper;
+    @Autowired
+    private SearchRpcService searchRpcService;
 
     @XxlJob("fansCountShardingJobHandler")
     public void fansCountShardingJobHandler() throws Exception {// 获取分片参数
@@ -71,6 +72,8 @@ public class FansCountShardingXxlJob {
                         redisTemplate.opsForHash().put(countUserKey, RedisKeyConstants.FIELD_FANS_TOTAL, fansTotal);
                     }
                 }
+                // 远程rpc，重构用户文档
+                searchRpcService.rebuildUserDocument(userId);
             });
             processedTotal += userIds.size();
             // 4. 批量物理删除这一批次记录

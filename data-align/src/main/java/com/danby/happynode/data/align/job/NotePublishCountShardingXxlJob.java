@@ -6,6 +6,7 @@ import com.danby.happynode.data.align.constant.TableConstants;
 import com.danby.happynode.data.align.domain.mapper.DeleteMapper;
 import com.danby.happynode.data.align.domain.mapper.SelectMapper;
 import com.danby.happynode.data.align.domain.mapper.UpdateMapper;
+import com.danby.happynode.data.align.rpc.SearchRpcService;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,8 @@ public class NotePublishCountShardingXxlJob {
     private DeleteMapper deleteMapper;
     @Autowired
     private UpdateMapper updateMapper;
+    @Autowired
+    private SearchRpcService searchRpcService;
 
     @XxlJob("notePublishCountShardingHandler")
     public void notePublishCountShardingHandler() {
@@ -63,6 +66,8 @@ public class NotePublishCountShardingXxlJob {
                         redisTemplate.opsForHash().put(countUserKey, RedisKeyConstants.FIELD_NOTE_TOTAL, noteTotal);
                     }
                 }
+                // 笔记文档重建
+                searchRpcService.rebuildUserDocument(userId);
             });
             deleteMapper.batchDeleteDataAlignNotePublishCountTempTable(tableNameSuffix, userIds);
             // 当前已处理的记录数

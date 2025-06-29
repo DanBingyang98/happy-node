@@ -6,6 +6,7 @@ import com.danby.happynode.data.align.constant.TableConstants;
 import com.danby.happynode.data.align.domain.mapper.DeleteMapper;
 import com.danby.happynode.data.align.domain.mapper.SelectMapper;
 import com.danby.happynode.data.align.domain.mapper.UpdateMapper;
+import com.danby.happynode.data.align.rpc.SearchRpcService;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,8 @@ public class NoteCollectCountShardingXxlJob {
     private SelectMapper selectMapper;
     @Autowired
     private DeleteMapper deleteMapper;
+    @Autowired
+    private SearchRpcService searchRpcService;
 
     @XxlJob("noteCollectCountShardingJobHandler")
     public void noteCollectCountShardingJobHandler() throws Exception {
@@ -71,6 +74,8 @@ public class NoteCollectCountShardingXxlJob {
                         redisTemplate.opsForHash().put(countNoteKey, RedisKeyConstants.FIELD_COLLECT_TOTAL, collectTotal);
                     }
                 }
+                // 远程RPC，调用搜索服务，重构笔记文档
+                searchRpcService.rebuildNoteDocument(noteId);
             });
             // 4. 批量物理删除这一批次记录
             deleteMapper.batchDeleteDataAlignNoteCollectCountTempTable(tableNameSuffix, noteIdList);

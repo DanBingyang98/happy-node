@@ -2,13 +2,17 @@ package com.danby.happynode.search.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.danby.happynode.framework.common.response.PageResponse;
+import com.danby.happynode.framework.common.response.Response;
 import com.danby.happynode.framework.common.util.NumberUtils;
+import com.danby.happynode.search.domain.mapper.SelectMapper;
+import com.danby.happynode.search.dto.RebuildUserDocumentReqDTO;
 import com.danby.happynode.search.index.UserIndex;
 import com.danby.happynode.search.model.vo.SearchUserReqVO;
 import com.danby.happynode.search.model.vo.SearchUserRespVO;
 import com.danby.happynode.search.service.UserService;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -31,6 +35,9 @@ import java.util.Map;
 public class UserServiceImpl implements UserService {
     @Autowired
     private RestHighLevelClient restHighLevelClient;
+
+    @Autowired
+    private SelectMapper selectMapper;
 
     /**
      * 搜索用户
@@ -137,5 +144,22 @@ public class UserServiceImpl implements UserService {
         }
 
         return PageResponse.success(searchUserRespVOS, pageNo, total);
+    }
+
+    @Override
+    public Response<Long> rebuildDocument(RebuildUserDocumentReqDTO rebuildUserDocumentReqDTO) {
+        Long userId = rebuildUserDocumentReqDTO.getId();
+        List<Map<String, Object>> maps = selectMapper.selectEsUserIndexData(userId);
+        for (Map<String, Object> map : maps) {
+            IndexRequest indexRequest = new IndexRequest(UserIndex.NAME)
+                    .id(String.valueOf(map.get(UserIndex.FIELD_USER_ID)))
+                    .source(map);
+            try {
+                restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
+            } catch (Exception e) {
+                log.error("==> 重建用户文档异常: ", e);
+            }
+        }
+        return Response.success();
     }
 }

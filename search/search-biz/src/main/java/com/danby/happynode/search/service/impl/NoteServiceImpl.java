@@ -3,8 +3,11 @@ package com.danby.happynode.search.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import com.danby.happynode.framework.common.constant.DateConstants;
 import com.danby.happynode.framework.common.response.PageResponse;
+import com.danby.happynode.framework.common.response.Response;
 import com.danby.happynode.framework.common.util.DateUtils;
 import com.danby.happynode.framework.common.util.NumberUtils;
+import com.danby.happynode.search.domain.mapper.SelectMapper;
+import com.danby.happynode.search.dto.RebuildNoteDocumentReqDTO;
 import com.danby.happynode.search.enums.NoteSortTypeEnum;
 import com.danby.happynode.search.enums.PublishTimeRangeEnum;
 import com.danby.happynode.search.index.NoteIndex;
@@ -13,6 +16,7 @@ import com.danby.happynode.search.model.vo.SearchNoteRespVO;
 import com.danby.happynode.search.service.NoteService;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -45,6 +49,9 @@ public class NoteServiceImpl implements NoteService {
 
     @Autowired
     private RestHighLevelClient restHighLevelClient;
+
+    @Autowired
+    private SelectMapper selectMapper;
 
 
     @Override
@@ -274,5 +281,22 @@ public class NoteServiceImpl implements NoteService {
             log.error("==> 查询 Elasticserach 异常: ", e);
         }
         return PageResponse.success(searchNoteRespVOS, pageNo, total);
+    }
+
+    @Override
+    public Response<Long> rebuildDocument(RebuildNoteDocumentReqDTO rebuildNoteDocumentReqDTO) {
+        Long id = rebuildNoteDocumentReqDTO.getId();
+        List<Map<String, Object>> maps = selectMapper.selectEsNoteIndexData(id, null);
+        for (Map<String, Object> map : maps) {
+            IndexRequest indexRequest = new IndexRequest(NoteIndex.NAME)
+                    .id(map.get(NoteIndex.FIELD_NOTE_ID).toString())
+                    .source(map);
+            try {
+                restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
+            } catch (Exception e) {
+                log.error("==> 重建文档异常: ", e);
+            }
+        }
+        return Response.success();
     }
 }
