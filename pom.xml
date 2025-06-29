@@ -26,6 +26,7 @@
         <module>data-align</module>
         <module>data-align</module>
         <module>search</module>
+        <module>comment</module>
     </modules>
 
     <properties>
