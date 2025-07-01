@@ -28,7 +28,16 @@
     from t_comment
     where id = #{id,jdbcType=BIGINT}
   </select>
-  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    <select id="selectByCommentIds" parameterType="list" resultMap="BaseResultMap">
+      SELECT id,level,parent_id,user_id
+      FROM t_comment
+      WHERE id IN
+      <foreach collection="commentIds" item="commentId" open="(" close=")" separator=",">
+        #{commentId}
+      </foreach>
+
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
     delete from t_comment
     where id = #{id,jdbcType=BIGINT}
   </delete>

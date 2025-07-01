@@ -47,5 +47,10 @@
             <groupId>com.danby.happynode.kv</groupId>
             <artifactId>happynode-kv-api</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.danby.happynode</groupId>
+            <artifactId>danby-spring-boot-starter-biz-operationlog</artifactId>
+        </dependency>
     </dependencies>
 </project>

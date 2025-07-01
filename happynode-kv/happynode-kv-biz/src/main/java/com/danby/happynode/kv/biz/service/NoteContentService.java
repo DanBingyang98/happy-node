@@ -2,6 +2,7 @@ package com.danby.happynode.kv.biz.service;
 
 import com.danby.happynode.framework.common.response.Response;
 import com.danby.happynode.kv.dto.req.AddNoteContentReqDTO;
+import com.danby.happynode.kv.dto.req.BatchAddCommentContentReqDTO;
 import com.danby.happynode.kv.dto.req.DeleteNoteContentReqDTO;
 import com.danby.happynode.kv.dto.req.FindNoteContentReqDTO;
 import com.danby.happynode.kv.dto.resp.FindNoteContentRespDTO;
@@ -30,4 +31,6 @@ public interface NoteContentService {
      * @return
      */
     Response<?> deleteNoteContent(DeleteNoteContentReqDTO deleteNoteContentReqDTO);
+
+
 }

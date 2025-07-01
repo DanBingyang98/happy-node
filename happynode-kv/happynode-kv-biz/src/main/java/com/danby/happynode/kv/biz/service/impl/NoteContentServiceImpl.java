@@ -2,17 +2,19 @@ package com.danby.happynode.kv.biz.service.impl;
 
 import com.danby.happynode.framework.common.exception.BusinessException;
 import com.danby.happynode.framework.common.response.Response;
+import com.danby.happynode.kv.biz.domain.dataobject.CommentContentDO;
+import com.danby.happynode.kv.biz.domain.dataobject.CommentContentPrimaryKey;
 import com.danby.happynode.kv.biz.domain.dataobject.NoteContentDO;
 import com.danby.happynode.kv.biz.domain.repository.NoteContentRepository;
 import com.danby.happynode.kv.biz.enums.ResponseCodeEnum;
 import com.danby.happynode.kv.biz.service.NoteContentService;
-import com.danby.happynode.kv.dto.req.AddNoteContentReqDTO;
-import com.danby.happynode.kv.dto.req.DeleteNoteContentReqDTO;
-import com.danby.happynode.kv.dto.req.FindNoteContentReqDTO;
+import com.danby.happynode.kv.dto.req.*;
 import com.danby.happynode.kv.dto.resp.FindNoteContentRespDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.cassandra.core.CassandraTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -57,4 +59,6 @@ public class NoteContentServiceImpl implements NoteContentService {
         noteContentRepository.deleteById(UUID.fromString(uuid));
         return Response.success();
     }
+
+
 }

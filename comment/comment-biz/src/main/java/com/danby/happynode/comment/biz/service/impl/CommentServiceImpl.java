@@ -5,6 +5,7 @@ import com.danby.happynode.comment.biz.constant.MQConstants;
 import com.danby.happynode.comment.biz.model.dto.PublishCommentMqDTO;
 import com.danby.happynode.comment.biz.model.vo.PublishCommentReqVO;
 import com.danby.happynode.comment.biz.retry.SendMQRetryHelper;
+import com.danby.happynode.comment.biz.rpc.DistributedIdGeneratorRpcService;
 import com.danby.happynode.comment.biz.service.CommentService;
 import com.danby.happynode.framework.common.response.Response;
 import com.google.common.base.Preconditions;
@@ -22,12 +23,17 @@ public class CommentServiceImpl implements CommentService {
     @Autowired
     private SendMQRetryHelper sendMQRetryHelper;
 
+    @Autowired
+    private DistributedIdGeneratorRpcService distributedIdGeneratorRpcService;
+
     @Override
     public Response<?> publishComment(PublishCommentReqVO publishCommentReqVO) {
         // 评论正文
         String content = publishCommentReqVO.getContent();
         // 附近图片
         String imageUrl = publishCommentReqVO.getImageUrl();
+        // 调用远程rpc服务，生成分布式commentId
+        String commentId = distributedIdGeneratorRpcService.getGeneratedCommentId();
 
         // 评论内容和图片不能同时为空
         Preconditions.checkArgument(StringUtils.isNotBlank(content) || StringUtils.isNotBlank(imageUrl),
@@ -43,6 +49,7 @@ public class CommentServiceImpl implements CommentService {
                 .imageUrl(imageUrl)
                 .createTime(LocalDateTime.now())
                 .creatorId(commentCreatorId)
+                .commentId(Long.valueOf(commentId))
                 .build();
         // 2. 通过SendMQRetryHelper发送消息
 //        sendMQRetryHelper.send(MQConstants.TOPIC_PUBLISH_COMMENT, publishCommentMqDTO);
