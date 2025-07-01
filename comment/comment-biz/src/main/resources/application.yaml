@@ -22,6 +22,7 @@ spring:
       - nacos:happynode-database?group=common
       - nacos:happynode-redis?group=common
       - nacos:happynode-rocketmq?group=common
+      - nacos:happynode-comment?group=comment
 management:
   endpoints:
     web:
@@ -34,3 +35,11 @@ logging:
   level:
     com.alibaba.cloud.nacos.configdata: debug
     com.danby.happynode.comment.biz.domain.mapper: debug
+rocketmq:
+  producer:
+    retry-times-when-send-async-fail: 0  # 异步发送消息失败后，重试的次数
+    retry-times-when-send-sync-fail: 0 # 同步发送消息失败后，重试的次数
+retry:
+  max-attempts: 3 # 最大重试次数
+  init-interval: 1000 # 初始延迟时间，单位 ms
+  multiplier: 2 # 每次重试间隔加倍（每次乘以 2）
