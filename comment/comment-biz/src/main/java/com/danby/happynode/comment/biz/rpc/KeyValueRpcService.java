@@ -1,6 +1,6 @@
 package com.danby.happynode.comment.biz.rpc;
 
-import com.danby.happynode.comment.biz.domain.dataobject.CommentBO;
+import com.danby.happynode.comment.biz.model.bo.CommentBO;
 import com.danby.happynode.framework.common.constant.DateConstants;
 import com.danby.happynode.framework.common.response.Response;
 import com.danby.happynode.kv.dto.api.KeyValueFeign;

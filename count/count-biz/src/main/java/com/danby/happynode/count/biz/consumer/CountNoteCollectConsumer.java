@@ -6,6 +6,7 @@ import com.danby.happynode.count.biz.enums.CollectUnCollectNoteTypeEnum;
 import com.danby.happynode.count.biz.model.dto.CountCollectUnCollectNoteMqDTO;
 import com.danby.happynode.framework.common.util.JsonUtils;
 import com.github.phantomthief.collection.BufferTrigger;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.producer.SendCallback;
@@ -54,9 +55,15 @@ public class CountNoteCollectConsumer implements RocketMQListener<String> {
         log.info("==> 【笔记收藏数】聚合消息, size: {}", bodys.size());
         log.info("==> 【笔记收藏数】聚合消息, {}", JsonUtils.toJsonString(bodys));
         // List<String> 转 List<CountCollectUnCollectNoteMqDTO>
-        List<CountCollectUnCollectNoteMqDTO> countCollectUnCollectNoteMqDTOS = bodys.stream()
-                .map(body -> JsonUtils.parseObject(body, CountCollectUnCollectNoteMqDTO.class))
-                .toList();
+        List<CountCollectUnCollectNoteMqDTO> countCollectUnCollectNoteMqDTOS = Lists.newArrayList();
+        for (String body : bodys) {
+            try {
+                List<CountCollectUnCollectNoteMqDTO> list = JsonUtils.parseList(body, CountCollectUnCollectNoteMqDTO.class);
+                countCollectUnCollectNoteMqDTOS.addAll(list);
+            } catch (Exception e) {
+                log.error("", e);
+            }
+        }
         // 按笔记 ID 进行分组
         Map<Long, List<CountCollectUnCollectNoteMqDTO>> groupMap = countCollectUnCollectNoteMqDTOS.stream()
                 .collect(Collectors.groupingBy(CountCollectUnCollectNoteMqDTO::getNoteId));

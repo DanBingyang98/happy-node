@@ -308,6 +308,9 @@ public class UserServiceImpl implements UserService {
             findUserByIdRespDTOS = redisValues.stream()
                     .map(value -> JsonUtils.parseObject(value.toString(), FindUserByIdRespDTO.class))
                     .toList();
+//            findUserByIdRespDTOS = redisValues.stream()
+//                    .map(value -> JsonUtils.parseObject(String.valueOf(value), FindUserByIdRespDTO.class))
+//                    .collect(Collectors.toList());
         }
         // 如果被查询的用户信息，都在 Redis 缓存中, 则直接返回
         if (CollUtil.size(findUserByIdRespDTOS) == CollUtil.size(userIds)) {

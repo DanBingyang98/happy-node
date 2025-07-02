@@ -5,6 +5,7 @@ import com.danby.happynode.count.biz.domain.mapper.NoteCountDOMapper;
 import com.danby.happynode.count.biz.model.dto.CountPublishCommentMqDTO;
 import com.danby.happynode.framework.common.util.JsonUtils;
 import com.github.phantomthief.collection.BufferTrigger;
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
@@ -43,7 +44,16 @@ public class CountNoteCommentConsumer implements RocketMQListener<String> {
         log.info("==> 【笔记评论数】聚合消息, size: {}", bodys.size());
         log.info("==> 【笔记评论数】聚合消息, {}", JsonUtils.toJsonString(bodys));
         // TODO:
-        List<CountPublishCommentMqDTO> countPublishCommentMqDTOS = bodys.stream().map(body -> JsonUtils.parseObject(body, CountPublishCommentMqDTO.class)).toList();
+//        List<CountPublishCommentMqDTO> countPublishCommentMqDTOS = bodys.stream().map(body -> JsonUtils.parseObject(body, CountPublishCommentMqDTO.class)).toList();
+        List<CountPublishCommentMqDTO> countPublishCommentMqDTOS = Lists.newArrayList();
+        for (String body : bodys) {
+            try {
+                List<CountPublishCommentMqDTO> list = JsonUtils.parseList(body, CountPublishCommentMqDTO.class);
+                countPublishCommentMqDTOS.addAll(list);
+            } catch (Exception e) {
+                log.error("==> 【笔记评论数】聚合消息, 解析失败: {}", body, e);
+            }
+        }
         Map<Long, List<CountPublishCommentMqDTO>> groupMap = countPublishCommentMqDTOS.stream().collect(Collectors.groupingBy(CountPublishCommentMqDTO::getNoteId));
         groupMap.forEach((noteId, value) -> {
             int count = value.size();

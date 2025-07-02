@@ -6,16 +6,23 @@ import com.danby.happynode.count.biz.enums.CommentLevelEnum;
 import com.danby.happynode.count.biz.model.dto.CountPublishCommentMqDTO;
 import com.danby.happynode.framework.common.util.JsonUtils;
 import com.github.phantomthief.collection.BufferTrigger;
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.client.producer.SendCallback;
+import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -28,6 +35,9 @@ public class CountNoteChildCommentConsumer implements RocketMQListener<String> {
 
     @Autowired
     private CommentDOMapper commentDOMapper;
+
+    @Autowired
+    private RocketMQTemplate rocketMQTemplate;
 
     private BufferTrigger bufferTrigger = BufferTrigger.<String>batchBlocking()
             .bufferSize(50000) // 缓存队列的最大容量
@@ -43,7 +53,17 @@ public class CountNoteChildCommentConsumer implements RocketMQListener<String> {
     }
 
     private void consumeMessage(List<String> strings) {
-        List<CountPublishCommentMqDTO> countPublishCommentMqDTOS = strings.stream().map(s -> JsonUtils.parseObject(s, CountPublishCommentMqDTO.class)).toList();
+        log.info("==> 【评论数量更新】MQ 聚合消息, size: {}", strings.size());
+//        List<CountPublishCommentMqDTO> countPublishCommentMqDTOS = strings.stream().map(s -> JsonUtils.parseObject(s, CountPublishCommentMqDTO.class)).toList();
+        List<CountPublishCommentMqDTO> countPublishCommentMqDTOS = Lists.newArrayList();
+        for (String s : strings) {
+            try {
+                List<CountPublishCommentMqDTO> list = JsonUtils.parseList(s, CountPublishCommentMqDTO.class);
+                countPublishCommentMqDTOS.addAll(list);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
         // 过滤出二级评论，并按 parent_id 分组
         Map<Long, List<CountPublishCommentMqDTO>> groupMap = countPublishCommentMqDTOS.stream()
                 .filter(countPublishCommentMqDTO -> Objects.equals(countPublishCommentMqDTO.getLevel(), CommentLevelEnum.TWO.getCode()))
@@ -52,5 +72,20 @@ public class CountNoteChildCommentConsumer implements RocketMQListener<String> {
         groupMap.forEach((parentId, levelTwoCommentMqDTOS) ->
                 commentDOMapper.updateChildCommentTotal(parentId, levelTwoCommentMqDTOS.size())
         );
+        // 获取字典中所有评论 ID
+        Set<Long> commentIds = groupMap.keySet();
+        // 异步发送计数 MQ, 更新评论热度值
+        Message<String> message = MessageBuilder.withPayload(JsonUtils.toJsonString(commentIds)).build();
+        rocketMQTemplate.asyncSend(MQConstants.TOPIC_COMMENT_HEAT_UPDATE, message, new SendCallback() {
+            @Override
+            public void onSuccess(SendResult sendResult) {
+                log.info("==> 【评论热度值更新】MQ 发送成功，SendResult: {}", sendResult);
+            }
+
+            @Override
+            public void onException(Throwable throwable) {
+                log.error("==> 【评论热度值更新】MQ 发送异常: ", throwable);
+            }
+        });
     }
 }

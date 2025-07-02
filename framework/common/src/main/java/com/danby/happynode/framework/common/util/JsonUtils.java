@@ -11,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class JsonUtils {
     // 定义一个静态的 ObjectMapper 对象
@@ -42,8 +43,8 @@ public class JsonUtils {
      *
      * @param jsonStr
      * @param clazz
-     * @return
      * @param <T>
+     * @return
      */
     @SneakyThrows
     public static <T> T parseObject(String jsonStr, Class<T> clazz) {
@@ -56,12 +57,13 @@ public class JsonUtils {
 
     /**
      * 将 JSON 字符串转换为 Map
+     *
      * @param jsonStr
      * @param keyClass
      * @param valueClass
-     * @return
      * @param <K>
      * @param <V>
+     * @return
      * @throws Exception
      */
     public static <K, V> Map<K, V> parseMap(String jsonStr, Class<K> keyClass, Class<V> valueClass) throws Exception {
@@ -78,8 +80,8 @@ public class JsonUtils {
      *
      * @param jsonStr
      * @param clazz
-     * @return
      * @param <T>
+     * @return
      * @throws Exception
      */
     public static <T> List<T> parseList(String jsonStr, Class<T> clazz) throws Exception {
@@ -88,6 +90,26 @@ public class JsonUtils {
             @Override
             public CollectionType getType() {
                 return OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, clazz);
+            }
+        });
+    }
+
+
+    /**
+     * 将 JSON 字符串解析为指定类型的 Set 对象
+     *
+     * @param jsonStr
+     * @param clazz
+     * @param <T>
+     * @return
+     * @throws Exception
+     */
+    public static <T> Set<T> parseSet(String jsonStr, Class<T> clazz) throws Exception {
+        // 使用 TypeReference 指定 Set<T> 的泛型类型
+        return OBJECT_MAPPER.readValue(jsonStr, new TypeReference<>() {
+            @Override
+            public CollectionType getType() {
+                return OBJECT_MAPPER.getTypeFactory().constructCollectionType(Set.class, clazz);
             }
         });
     }

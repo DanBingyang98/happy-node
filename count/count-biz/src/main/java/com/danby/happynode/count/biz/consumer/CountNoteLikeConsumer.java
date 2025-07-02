@@ -56,9 +56,15 @@ public class CountNoteLikeConsumer implements RocketMQListener<String> {
         log.info("==> 【笔记点赞数】聚合消息, {}", JsonUtils.toJsonString(bodys));
         // TODO:
         // List<String> 转 List<CountLikeUnlikeNoteMqDTO>
-        List<CountLikeUnlikeNoteMqDTO> countLikeUnlikeNoteMqDTOS = bodys.stream()
-                .map(body -> JsonUtils.parseObject(body, CountLikeUnlikeNoteMqDTO.class))
-                .toList();
+        List<CountLikeUnlikeNoteMqDTO> countLikeUnlikeNoteMqDTOS = Lists.newArrayList();
+        for (String body : bodys) {
+            try {
+                List<CountLikeUnlikeNoteMqDTO> list = JsonUtils.parseList(body, CountLikeUnlikeNoteMqDTO.class);
+                countLikeUnlikeNoteMqDTOS.addAll(list);
+            } catch (Exception e) {
+                log.error("", e);
+            }
+        }
         // 按笔记 ID 进行分组
         Map<Long, List<CountLikeUnlikeNoteMqDTO>> groupMap = countLikeUnlikeNoteMqDTOS.stream()
                 .collect(Collectors.groupingBy(CountLikeUnlikeNoteMqDTO::getNoteId));

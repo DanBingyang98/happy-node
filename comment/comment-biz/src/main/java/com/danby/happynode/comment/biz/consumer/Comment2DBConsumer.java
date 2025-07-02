@@ -3,7 +3,7 @@ package com.danby.happynode.comment.biz.consumer;
 import cn.hutool.core.collection.CollUtil;
 import com.alibaba.nacos.shaded.com.google.common.util.concurrent.RateLimiter;
 import com.danby.happynode.comment.biz.constant.MQConstants;
-import com.danby.happynode.comment.biz.domain.dataobject.CommentBO;
+import com.danby.happynode.comment.biz.model.bo.CommentBO;
 import com.danby.happynode.comment.biz.domain.dataobject.CommentDO;
 import com.danby.happynode.comment.biz.domain.mapper.CommentDOMapper;
 import com.danby.happynode.comment.biz.enums.CommentLevelEnum;

@@ -90,15 +90,20 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
-
+        <!-- 分布式id生成 -->
         <dependency>
             <groupId>com.danby</groupId>
             <artifactId>happynode-distributed-id-generator-api</artifactId>
         </dependency>
-
+        <!-- cassandra文本存储 -->
         <dependency>
             <groupId>com.danby.happynode.kv</groupId>
             <artifactId>happynode-kv-api</artifactId>
+        </dependency>
+        <!-- 快手 Buffer Trigger -->
+        <dependency>
+            <groupId>com.github.phantomthief</groupId>
+            <artifactId>buffer-trigger</artifactId>
         </dependency>
     </dependencies>
 

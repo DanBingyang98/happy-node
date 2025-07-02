@@ -1,4 +1,4 @@
-package com.danby.happynode.comment.biz.domain.dataobject;
+package com.danby.happynode.comment.biz.model.bo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
