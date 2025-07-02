@@ -90,6 +90,16 @@
         UPDATE
             create_time = #{createTime}, status = #{status};
     </insert>
+    <insert id="batchInsertOrUpdate" parameterType="list">
+        INSERT INTO t_note_like (user_id, note_id, create_time, status)
+        VALUES
+        <foreach collection="noteLikeDOS" item="item" separator=",">
+            (#{item.userId}, #{item.noteId}, #{item.createTime}, #{item.status})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        status = VALUES(status);
+    </insert>
+
     <update id="updateByPrimaryKeySelective" parameterType="com.danby.happynode.note.biz.domain.dataobject.NoteLikeDO">
         update t_note_like
         <set>
