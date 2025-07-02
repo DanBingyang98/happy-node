@@ -95,6 +95,11 @@
             <groupId>com.danby</groupId>
             <artifactId>happynode-distributed-id-generator-api</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.danby.happynode.kv</groupId>
+            <artifactId>happynode-kv-api</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

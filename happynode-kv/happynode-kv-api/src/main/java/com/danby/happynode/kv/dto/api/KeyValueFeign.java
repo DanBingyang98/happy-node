@@ -3,6 +3,7 @@ package com.danby.happynode.kv.dto.api;
 import com.danby.happynode.framework.common.response.Response;
 import com.danby.happynode.kv.dto.constant.ApiConstants;
 import com.danby.happynode.kv.dto.req.AddNoteContentReqDTO;
+import com.danby.happynode.kv.dto.req.BatchAddCommentContentReqDTO;
 import com.danby.happynode.kv.dto.req.DeleteNoteContentReqDTO;
 import com.danby.happynode.kv.dto.req.FindNoteContentReqDTO;
 import com.danby.happynode.kv.dto.resp.FindNoteContentRespDTO;
@@ -21,4 +22,7 @@ public interface KeyValueFeign {
 
     @PostMapping("/note/content/delete")
     Response<?> deleteNoteContent(@RequestBody DeleteNoteContentReqDTO reqDTO);
+
+    @PostMapping("/comment/content/batchAdd")
+    Response<?> batchAddCommentContent(@RequestBody BatchAddCommentContentReqDTO batchAddCommentContentReqDTO);
 }

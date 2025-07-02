@@ -1,5 +1,6 @@
 package com.danby.happynode.comment.biz.domain.mapper;
 
+import com.danby.happynode.comment.biz.domain.dataobject.CommentBO;
 import com.danby.happynode.comment.biz.domain.dataobject.CommentDO;
 import org.apache.ibatis.annotations.Param;
 
@@ -24,4 +25,11 @@ public interface CommentDOMapper {
      * @return
      */
     List<CommentDO> selectByCommentIds(@Param("commentIds") List<Long> commentIds);
+
+    /**
+     * 批量插入评论
+     * @param comments
+     * @return
+     */
+    int batchAddComment(@Param("comments")List<CommentBO> comments);
 }

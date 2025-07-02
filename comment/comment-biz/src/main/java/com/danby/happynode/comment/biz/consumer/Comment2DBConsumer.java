@@ -8,7 +8,7 @@ import com.danby.happynode.comment.biz.domain.dataobject.CommentDO;
 import com.danby.happynode.comment.biz.domain.mapper.CommentDOMapper;
 import com.danby.happynode.comment.biz.enums.CommentLevelEnum;
 import com.danby.happynode.comment.biz.model.dto.PublishCommentMqDTO;
-import com.danby.happynode.comment.biz.service.impl.CommentServiceImpl;
+import com.danby.happynode.comment.biz.rpc.KeyValueRpcService;
 import com.danby.happynode.framework.common.util.JsonUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.PreDestroy;
 import java.util.*;
@@ -41,11 +42,17 @@ public class Comment2DBConsumer {
     @Autowired
     private CommentDOMapper commentDOMapper;
 
+    @Autowired
+    private KeyValueRpcService keyValueRpcService;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
+
     // 每秒创建 1000 个令牌
     private RateLimiter rateLimiter = RateLimiter.create(1000);
 
     @Bean
-    public DefaultMQPushConsumer mqPushConsumer(CommentServiceImpl commentServiceImpl) throws Exception {
+    public DefaultMQPushConsumer mqPushConsumer() throws Exception {
         // Group组
         String group = "happynode_group_" + MQConstants.TOPIC_PUBLISH_COMMENT;
         // 创建一个新的DefaultMQPushConsumer实例，并设置Consumer的Group名称
@@ -73,21 +80,22 @@ public class Comment2DBConsumer {
                     String jsonStr = new String(msg.getBody());
                     publishCommentMqDTOS.add(JsonUtils.parseObject(jsonStr, PublishCommentMqDTO.class));
                 }
-                // 提取所有不为空的回复评论 ID
+                // 提取所有不为空的 回复评论ID
                 List<Long> replyCommentIds = publishCommentMqDTOS.stream()
                         .filter(publishCommentMqDTO -> Objects.nonNull(publishCommentMqDTO.getReplyCommentId()))
                         .map(PublishCommentMqDTO::getReplyCommentId).toList();
 
-                // 根据回复评论 ID 批量查询回复评论
+                // 根据 回复评论ID 批量查询回复评论
                 List<CommentDO> replyCommentDOs = null;
                 if (CollUtil.isNotEmpty(replyCommentIds)) {
                     // 查询数据库
                     replyCommentDOs = commentDOMapper.selectByCommentIds(replyCommentIds);
                 }
-                // DO 集合转 <评论 ID - 评论 DO> 字典, 以方便后续查找
-                Map<Long, CommentDO> commentIdAndCommentDOMap = Maps.newHashMap();
+                // DO 集合转 <评论ID - 评论DO> 字典, 以方便后续查找
+                Map<Long, CommentDO> replyCommentIdAndCommentDOMap = Maps.newHashMap();
                 if (CollUtil.isNotEmpty(replyCommentDOs)) {
-                    commentIdAndCommentDOMap = replyCommentDOs.stream().collect(Collectors.toMap(CommentDO::getId, commentDO -> commentDO));
+                    replyCommentIdAndCommentDOMap = replyCommentDOs.stream()
+                            .collect(Collectors.toMap(CommentDO::getId, commentDO -> commentDO));
                 }
                 // DTO 转 BO
                 List<CommentBO> commentBOS = Lists.newArrayList();
@@ -107,7 +115,7 @@ public class Comment2DBConsumer {
                             .replyTotal(0L)
                             .likeTotal(0L)
                             .replyCommentId(0L)
-                            .replyCommentId(0L)
+                            .replyUserId(0L)
                             .build();
 
                     // 评论内容若不为空
@@ -119,8 +127,9 @@ public class Comment2DBConsumer {
                     }
                     // 设置评论级别、回复用户 ID (reply_user_id)、父评论 ID (parent_id)
                     Long replyCommentId = publishCommentMqDTO.getReplyCommentId();
+                    // 如果该条评论有回复的评论ID 说明是二级评论
                     if (Objects.nonNull(replyCommentId)) {
-                        CommentDO replyCommentDO = commentIdAndCommentDOMap.get(replyCommentId);
+                        CommentDO replyCommentDO = replyCommentIdAndCommentDOMap.get(replyCommentId);
                         if (Objects.nonNull(replyCommentDO)) {
                             // 若回复的评论 ID 不为空，说明是二级评论
                             commentBO.setLevel(CommentLevelEnum.TWO.getCode());
@@ -138,6 +147,25 @@ public class Comment2DBConsumer {
                 }
                 log.info("## 清洗后的 CommentBOS: {}", JsonUtils.toJsonString(commentBOS));
                 // TODO: 后续处理...
+                transactionTemplate.execute(transactionStatus -> {
+                    // 先批量存入评论元数据
+                    commentDOMapper.batchAddComment(commentBOS);
+                    // 过滤出评论内容不为空的 BO
+                    List<CommentBO> contentNonNullCommentBOS = commentBOS.stream()
+                            .filter(commentBO -> Boolean.FALSE.equals(commentBO.getIsContentEmpty()))
+                            .toList();
+                    try {
+                        if (!CollUtil.isEmpty(contentNonNullCommentBOS)) {
+                            // 批量存入评论内容
+                            keyValueRpcService.batchAddCommentContent(contentNonNullCommentBOS);
+                        }
+                        return true;
+                    } catch (Exception e) {
+                        transactionStatus.setRollbackOnly();  // 标记事务为回滚
+                        log.error("", e);
+                        throw e;
+                    }
+                });
 
                 //  手动 ACK，告诉 RocketMQ 这批次消息消费成功
                 return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;

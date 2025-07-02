@@ -43,13 +43,13 @@ public class CommentServiceImpl implements CommentService {
 
         // 1. 构建消息体 DTO
         PublishCommentMqDTO publishCommentMqDTO = PublishCommentMqDTO.builder()
-                .replyCommentId(publishCommentReqVO.getReplyCommentId())
-                .noteId(publishCommentReqVO.getNoteId())
-                .content(content)
-                .imageUrl(imageUrl)
-                .createTime(LocalDateTime.now())
-                .creatorId(commentCreatorId)
-                .commentId(Long.valueOf(commentId))
+                .replyCommentId(publishCommentReqVO.getReplyCommentId())  // 回复的哪个评论（评论 ID）
+                .noteId(publishCommentReqVO.getNoteId()) // 所评论的笔记 ID
+                .content(content) // 评论的文本内容
+                .imageUrl(imageUrl) // 评论的图片url
+                .createTime(LocalDateTime.now()) // 创建时间
+                .creatorId(commentCreatorId) // 发布评论者的id
+                .commentId(Long.valueOf(commentId)) // 评论id
                 .build();
         // 2. 通过SendMQRetryHelper发送消息
 //        sendMQRetryHelper.send(MQConstants.TOPIC_PUBLISH_COMMENT, publishCommentMqDTO);
