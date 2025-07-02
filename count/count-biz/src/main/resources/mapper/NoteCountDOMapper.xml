@@ -71,6 +71,11 @@
         VALUES (#{noteId}, #{count}) ON DUPLICATE KEY
         UPDATE like_total = like_total + (#{count});
     </insert>
+    <insert id="insertOrUpdateCommentTotalByNoteId" parameterType="map">
+        INSERT INTO t_note_count (note_id, comment_total)
+        VALUES (#{noteId}, #{count}) ON DUPLICATE KEY
+        UPDATE comment_total = comment_total + (#{count});
+    </insert>
     <update id="updateByPrimaryKeySelective"
             parameterType="com.danby.happynode.count.biz.domain.dataobject.NoteCountDO">
         update t_note_count

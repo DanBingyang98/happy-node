@@ -23,4 +23,12 @@ public interface NoteCountDOMapper {
      * @return
      */
     int insertOrUpdateLikeTotalByNoteId(@Param("count") Integer count, @Param("noteId") Long noteId);
+
+    /**
+     * 添加记录或更新笔记评论数
+     * @param count
+     * @param noteId
+     * @return
+     */
+    int insertOrUpdateCommentTotalByNoteId(@Param("count") Integer count, @Param("noteId") Long noteId);
 }
