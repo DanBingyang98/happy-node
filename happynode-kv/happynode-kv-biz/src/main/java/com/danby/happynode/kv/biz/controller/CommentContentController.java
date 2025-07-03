@@ -4,6 +4,7 @@ import com.danby.happynode.framework.biz.operationlog.aspect.ApiOperationLog;
 import com.danby.happynode.framework.common.response.Response;
 import com.danby.happynode.kv.biz.service.CommentContentService;
 import com.danby.happynode.kv.dto.req.BatchAddCommentContentReqDTO;
+import com.danby.happynode.kv.dto.req.BatchFindCommentContentReqDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -24,5 +25,11 @@ public class CommentContentController {
     @ApiOperationLog(description = "批量存储评论内容")
     public Response<?> batchAddCommentContent(@Validated @RequestBody BatchAddCommentContentReqDTO batchAddCommentContentReqDTO) {
         return commentContentService.batchAddCommentContent(batchAddCommentContentReqDTO);
+    }
+
+    @PostMapping(value = "/comment/content/batchFind")
+    @ApiOperationLog(description = "批量查询评论内容")
+    public Response<?> batchFindCommentContent(@Validated @RequestBody BatchFindCommentContentReqDTO batchFindCommentContentReqDTO) {
+        return commentContentService.batchFindCommentContent(batchFindCommentContentReqDTO);
     }
 }
