@@ -5,13 +5,17 @@ import com.danby.happynode.framework.common.constant.DateConstants;
 import com.danby.happynode.framework.common.response.Response;
 import com.danby.happynode.kv.dto.api.KeyValueFeign;
 import com.danby.happynode.kv.dto.req.BatchAddCommentContentReqDTO;
+import com.danby.happynode.kv.dto.req.BatchFindCommentContentReqDTO;
 import com.danby.happynode.kv.dto.req.CommentContentReqDTO;
+import com.danby.happynode.kv.dto.req.FindCommentContentReqDTO;
+import com.danby.happynode.kv.dto.resp.FindCommentContentRespDTO;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Objects;
 
 @Component
 @Slf4j
@@ -43,7 +47,18 @@ public class KeyValueRpcService {
             throw new RuntimeException("批量保存评论内容失败");
         }
         return true;
+    }
 
+    public List<FindCommentContentRespDTO> batchFindCommentContent(Long noteId, List<FindCommentContentReqDTO> findCommentContentReqDTOS) {
+        BatchFindCommentContentReqDTO batchFindCommentContentReqDTO = BatchFindCommentContentReqDTO.builder()
+                .noteId(noteId)
+                .commentContentKeys(findCommentContentReqDTOS)
+                .build();
+        Response<List<FindCommentContentRespDTO>> response = keyValueFeign.batchFindCommentContent(batchFindCommentContentReqDTO);
+        if (!response.isSuccess() || Objects.isNull(response.getData()) || response.getData().isEmpty()) {
+            return null;
+        }
+        return response.getData();
 
     }
 }

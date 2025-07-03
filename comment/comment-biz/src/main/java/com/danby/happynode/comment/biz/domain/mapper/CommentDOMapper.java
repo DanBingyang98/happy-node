@@ -22,6 +22,7 @@ public interface CommentDOMapper {
 
     /**
      * 根据评论 ID 批量查询
+     *
      * @param commentIds
      * @return
      */
@@ -29,13 +30,15 @@ public interface CommentDOMapper {
 
     /**
      * 批量插入评论
+     *
      * @param comments
      * @return
      */
-    int batchAddComment(@Param("comments")List<CommentBO> comments);
+    int batchAddComment(@Param("comments") List<CommentBO> comments);
 
     /**
      * 批量更新热度值
+     *
      * @param commentIds
      * @param commentHeatBOS
      * @return
@@ -45,6 +48,7 @@ public interface CommentDOMapper {
 
     /**
      * 查询一级评论下最早回复的评论
+     *
      * @param parentId
      * @return
      */
@@ -52,11 +56,31 @@ public interface CommentDOMapper {
 
     /**
      * 更新一级评论的 first_reply_comment_id
+     *
      * @param firstReplyCommentId
      * @param id
      * @return
      */
     int updateFirstReplyCommentIdByPrimaryKey(@Param("firstReplyCommentId") Long firstReplyCommentId,
                                               @Param("id") Long id);
+
+    /**
+     * 查询评论分页数据
+     *
+     * @param noteId
+     * @param offset
+     * @param pageSize
+     * @return
+     */
+    List<CommentDO> selectPageList(@Param("noteId") Long noteId,
+                                   @Param("offset") long offset,
+                                   @Param("pageSize") long pageSize);
+
+    /**
+     * 批量查询二级评论
+     * @param commentIds
+     * @return
+     */
+    List<CommentDO> selectTwoLevelCommentByIds(@Param("commentIds") List<Long> commentIds);
 
 }

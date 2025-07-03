@@ -108,6 +108,11 @@
             <groupId>com.github.phantomthief</groupId>
             <artifactId>buffer-trigger</artifactId>
         </dependency>
+        <!-- 用户模块 -->
+        <dependency>
+            <groupId>com.danby.happynode</groupId>
+            <artifactId>user-api</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
