@@ -45,7 +45,9 @@ public class SendMQRetryHelper {
     }
 
     public void asyncSend(String topic, PublishCommentMqDTO publishCommentMqDTO) {
-        Message<String> message = MessageBuilder.withPayload(JsonUtils.toJsonString(publishCommentMqDTO)).build();
+        Message<String> message = MessageBuilder.withPayload(JsonUtils.toJsonString(publishCommentMqDTO))
+                .build();
+
         rocketMQTemplate.asyncSend(topic, message, new SendCallback() {
             @Override
             public void onSuccess(SendResult sendResult) {

@@ -18,6 +18,7 @@
     <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
     <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
     <result column="child_comment_total" jdbcType="BIGINT" property="childCommentTotal" />
+    <result column="first_reply_comment_id" jdbcType="BIGINT" property="firstReplyCommentId" />
   </resultMap>
   <sql id="Base_Column_List">
     id, note_id, user_id, content_uuid, is_content_empty, image_url, `level`, reply_total, 
@@ -30,7 +31,7 @@
     where id = #{id,jdbcType=BIGINT}
   </select>
     <select id="selectByCommentIds" parameterType="list" resultMap="BaseResultMap">
-      SELECT id,level,parent_id,user_id,child_comment_total,like_total
+      SELECT id,level,parent_id,user_id,child_comment_total,like_total,first_reply_comment_id
       FROM t_comment
       WHERE id IN
       <foreach collection="commentIds" item="commentId" open="(" close=")" separator=",">
@@ -38,7 +39,11 @@
       </foreach>
 
     </select>
-    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+  <select id="selectEarliestByParentId" resultMap="BaseResultMap" parameterType="map">
+    select id from t_comment
+    where parent_id = #{parentId} and level = 2 order by create_time asc limit 1
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
     delete from t_comment
     where id = #{id,jdbcType=BIGINT}
   </delete>
@@ -247,5 +252,10 @@
       #{commentId}
     </foreach>
 
+  </update>
+  <update id="updateFirstReplyCommentIdByPrimaryKey" parameterType="map">
+    update t_comment
+    set first_reply_comment_id = #{firstReplyCommentId}
+    where id = #{id}
   </update>
 </mapper>
