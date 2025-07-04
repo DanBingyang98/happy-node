@@ -3,10 +3,11 @@ package com.danby.happynode.comment.biz.consumer;
 import cn.hutool.core.collection.CollUtil;
 import com.alibaba.nacos.shaded.com.google.common.util.concurrent.RateLimiter;
 import com.danby.happynode.comment.biz.constant.MQConstants;
-import com.danby.happynode.comment.biz.model.bo.CommentBO;
+import com.danby.happynode.comment.biz.constant.RedisKeyConstants;
 import com.danby.happynode.comment.biz.domain.dataobject.CommentDO;
 import com.danby.happynode.comment.biz.domain.mapper.CommentDOMapper;
 import com.danby.happynode.comment.biz.enums.CommentLevelEnum;
+import com.danby.happynode.comment.biz.model.bo.CommentBO;
 import com.danby.happynode.comment.biz.model.dto.CountPublishCommentMqDTO;
 import com.danby.happynode.comment.biz.model.dto.PublishCommentMqDTO;
 import com.danby.happynode.comment.biz.rpc.KeyValueRpcService;
@@ -27,8 +28,12 @@ import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.scripting.support.ResourceScriptSource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -56,6 +61,9 @@ public class Comment2DBConsumer {
 
     @Autowired
     private RocketMQTemplate rocketMQTemplate;
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     // 每秒创建 1000 个令牌
     private RateLimiter rateLimiter = RateLimiter.create(1000);
@@ -189,6 +197,8 @@ public class Comment2DBConsumer {
                             .toList();
                     // 异步发送mq 到计数服务消费
                     Message<String> message = MessageBuilder.withPayload(JsonUtils.toJsonString(countPublishCommentMqDTOs)).build();
+                    // 同步一级评论到redis 热点评论ZSet
+                    syncLevelOneCommentToRedisZSet(commentBOS);
                     rocketMQTemplate.asyncSend(MQConstants.TOPIC_COUNT_NOTE_COMMENT, message, new SendCallback() {
                         @Override
                         public void onSuccess(SendResult sendResult) {
@@ -212,6 +222,30 @@ public class Comment2DBConsumer {
         });
         consumer.start();
         return consumer;
+    }
+
+    private void syncLevelOneCommentToRedisZSet(List<CommentBO> commentBOS) {
+        // 过滤出一级评论，并按所属笔记进行分组，转换为一个 Map 字典
+        Map<Long, List<CommentBO>> commentIdAndBOListMap = commentBOS.stream()
+                .filter(commentBO -> Objects.equals(commentBO.getLevel(), CommentLevelEnum.ONE.getCode())) // 筛选出一级评论
+                .collect(Collectors.groupingBy(CommentBO::getNoteId));
+        // 循环字典
+        commentIdAndBOListMap.forEach((noteId, commentBOs) -> {
+            // 构建 Redis 热点评论 ZSET Key
+            String commentListKey = RedisKeyConstants.buildCommentListKey(noteId);
+            DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+            script.setScriptSource(new ResourceScriptSource(new ClassPathResource("/lua/add_hot_comments.lua")));
+            script.setResultType(Long.class);
+
+            // 构建lua脚本需要的参数
+            List<Object> args = Lists.newArrayList();
+            for (CommentBO commentBO : commentBOs) {
+                args.add(commentBO.getId()); // Member: 评论ID
+                args.add(0); // Score: 热度值，初始值为 0
+            }
+            // 执行 Lua 脚本
+            redisTemplate.execute(script, Collections.singletonList(commentListKey), args.toArray());
+        });
     }
 
 
