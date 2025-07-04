@@ -35,6 +35,7 @@ logging:
   level:
     com.alibaba.cloud.nacos.configdata: debug
     com.danby.happynode.comment.biz.domain.mapper: debug
+    com.danby.happynode.comment.biz.domain.service: debug
 rocketmq:
   producer:
     retry-times-when-send-async-fail: 0  # 异步发送消息失败后，重试的次数

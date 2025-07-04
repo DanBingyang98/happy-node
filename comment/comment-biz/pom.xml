@@ -113,6 +113,11 @@
             <groupId>com.danby.happynode</groupId>
             <artifactId>user-api</artifactId>
         </dependency>
+        <!-- Caffeine 本地缓存 -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
