@@ -78,6 +78,7 @@ public interface CommentDOMapper {
 
     /**
      * 批量查询二级评论
+     *
      * @param commentIds
      * @return
      */
@@ -85,13 +86,15 @@ public interface CommentDOMapper {
 
     /**
      * 查询热门评论
+     *
      * @param noteId
      * @return
      */
-    List<CommentDO> selectHeatComments(@Param("noteId")Long noteId);
+    List<CommentDO> selectHeatComments(@Param("noteId") Long noteId);
 
     /**
      * 查询一级评论下子评论总数
+     *
      * @param commentId
      * @return
      */
@@ -99,13 +102,22 @@ public interface CommentDOMapper {
 
     /**
      * 查询二级评论分页数据
+     *
      * @param parentId 一级评论id
-     * @param offset 偏移量
+     * @param offset   偏移量
      * @param pageSize 单页大小
      * @return
      */
     List<CommentDO> selectChildCommentPageList(@Param("parentId") Long parentId,
                                                @Param("offset") long offset,
                                                @Param("pageSize") long pageSize);
+
+    /**
+     * 批量查询计数数据
+     *
+     * @param commentIds
+     * @return
+     */
+    List<CommentDO> selectCommentCountByIds(@Param("commentIds") List<Long> commentIds);
 
 }

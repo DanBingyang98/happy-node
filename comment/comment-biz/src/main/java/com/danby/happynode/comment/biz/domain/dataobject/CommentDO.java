@@ -24,7 +24,7 @@ public class CommentDO {
 
     private String imageUrl;
 
-    private Byte level;
+    private Integer level;
 
     private Long replyTotal;
 

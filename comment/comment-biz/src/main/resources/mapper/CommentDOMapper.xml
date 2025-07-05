@@ -104,6 +104,14 @@
         ORDER BY id ASC
             LIMIT #{offset}, #{pageSize}
     </select>
+    <select id="selectCommentCountByIds" resultMap="BaseResultMap" parameterType="list">
+        SELECT id, child_comment_total,like_total,level
+        FROM t_comment
+        WHERE id IN
+        <foreach collection="commentIds" item="commentId" open="(" close=")" separator=",">
+            #{commentId}
+        </foreach>
+    </select>
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
         delete
         from t_comment

@@ -1,6 +1,7 @@
 package com.danby.happynode.count.biz.consumer;
 
 import com.danby.happynode.count.biz.constant.MQConstants;
+import com.danby.happynode.count.biz.constant.RedisKeyConstants;
 import com.danby.happynode.count.biz.domain.mapper.CommentDOMapper;
 import com.danby.happynode.count.biz.enums.CommentLevelEnum;
 import com.danby.happynode.count.biz.model.dto.CountPublishCommentMqDTO;
@@ -14,6 +15,7 @@ import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
@@ -45,6 +47,8 @@ public class CountNoteChildCommentConsumer implements RocketMQListener<String> {
             .linger(Duration.ofSeconds(1)) // 多久聚合一次（1s 一次）
             .setConsumerEx(this::consumeMessage) // 设置消费者方法
             .build();
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Override
     public void onMessage(String body) {
@@ -69,8 +73,18 @@ public class CountNoteChildCommentConsumer implements RocketMQListener<String> {
                 .filter(countPublishCommentMqDTO -> Objects.equals(countPublishCommentMqDTO.getLevel(), CommentLevelEnum.TWO.getCode()))
                 .collect(Collectors.groupingBy(CountPublishCommentMqDTO::getParentId)); // 按 parent_id 分组
         if (groupMap.isEmpty()) return;
-        groupMap.forEach((parentId, levelTwoCommentMqDTOS) ->
-                commentDOMapper.updateChildCommentTotal(parentId, levelTwoCommentMqDTOS.size())
+        groupMap.forEach((parentId, levelTwoCommentMqDTOS) -> {
+                    long count = levelTwoCommentMqDTOS.size();
+                    // TODO 更新redis缓存中的评论计数数据
+            String key = RedisKeyConstants.buildCountCommentKey(parentId);
+            Boolean hasKey = redisTemplate.hasKey(key);
+            if (hasKey) {
+                redisTemplate.opsForHash().increment(key, RedisKeyConstants.FIELD_CHILD_COMMENT_TOTAL, count);
+            }
+
+
+            commentDOMapper.updateChildCommentTotal(parentId, levelTwoCommentMqDTOS.size());
+                }
         );
         // 获取字典中所有评论 ID
         Set<Long> commentIds = groupMap.keySet();

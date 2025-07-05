@@ -10,6 +10,7 @@ import com.danby.happynode.comment.biz.constant.RedisKeyConstants;
 import com.danby.happynode.comment.biz.domain.dataobject.CommentDO;
 import com.danby.happynode.comment.biz.domain.mapper.CommentDOMapper;
 import com.danby.happynode.comment.biz.domain.mapper.NoteCountDOMapper;
+import com.danby.happynode.comment.biz.enums.CommentLevelEnum;
 import com.danby.happynode.comment.biz.enums.ResponseCodeEnum;
 import com.danby.happynode.comment.biz.model.dto.PublishCommentMqDTO;
 import com.danby.happynode.comment.biz.model.vo.*;
@@ -193,6 +194,10 @@ public class CommentServiceImpl implements CommentService {
                     }
                     // 如果localCacheExpiredCommentIds 大小等于0 说明数据都在本地缓存中，则直接返回响应
                     if (CollUtil.isEmpty(localCacheExpiredCommentIds)) {
+                        // 计数信息需要从redis中查找
+                        if (CollUtil.isNotEmpty(commentRespVOS)) {
+                            setCommentCountData(commentRespVOS, localCacheExpiredCommentIds);
+                        }
                         return PageResponse.success(commentRespVOS, pageNo, count, pageSize);
                     }
                     // 构建 MGET 批量查询评论详情的 Key 集合 从localCacheExpireCommentIds 中拿到
@@ -213,6 +218,11 @@ public class CommentServiceImpl implements CommentService {
                             expiredCommentIds.add(Long.valueOf(commentIdList.get(i).toString()));
                         }
                     }
+                    //在redis中存在的一级评论详情 需要再次从redis查询其计数信息
+                    if (CollUtil.isNotEmpty(commentRespVOS)) {
+                        setCommentCountData(commentRespVOS, expiredCommentIds);
+                    }
+
                     // 对于换从中不存在的一级评论 需要批量从数据库中查 并添加到commentRespVOS中
                     if (CollUtil.isNotEmpty(expiredCommentIds)) {
                         List<CommentDO> commentDOS = commentDOMapper.selectByCommentIds(expiredCommentIds);
@@ -576,5 +586,129 @@ public class CommentServiceImpl implements CommentService {
             // 批量添加缓存数据
             LOCAL_CACHE.putAll(localCacheData);
         });
+    }
+
+    /**
+     * 设置评论 VO 的计数
+     *
+     * @param commentVOS        返参 VO 集合
+     * @param expiredCommentIds 缓存中已失效的评论 ID 集合
+     */
+    private void setCommentCountData(List<FindCommentItemRespVO> commentVOS, List<Long> expiredCommentIds) {
+        // 准备从评论 Hash 中查询计数 (子评论总数、被点赞数)
+        // 缓存中存在的评论 ID
+        List<Long> existCommentIds = Lists.newArrayList();
+        // 遍历从缓存中解析出的 VO 集合，提取一级、二级评论 ID
+        for (FindCommentItemRespVO commentVO : commentVOS) {
+            Long commentId = commentVO.getCommentId();
+            existCommentIds.add(commentId);
+            FindCommentItemRespVO firstReplyCommentVO = commentVO.getFirstReplyComment();
+            if (Objects.nonNull(firstReplyCommentVO)) {
+                existCommentIds.add(firstReplyCommentVO.getCommentId());
+            }
+        }
+        // 已失效的Hash评论ID
+        List<Long> expiredCountCommentIds = Lists.newArrayList();
+        // 构建需要查询的HashKey集合
+        List<String> countCommentHashKeys = existCommentIds.stream()
+                .map(RedisKeyConstants::buildCountCommentKey)
+                .toList();
+        // 使用redis查询
+        List<Object> results = redisTemplate.executePipelined(new SessionCallback<>() {
+            @Override
+            public Object execute(RedisOperations operations) throws DataAccessException {
+                // 遍历需要查询的评论计数的 Hash 键集合
+                // 在管道中执行 Redis 的 hash.entries 操作，此操作会获取指定 Hash 键中所有的字段和值
+                countCommentHashKeys.forEach(key -> operations.opsForHash().entries(key));
+                return null;
+            }
+        });
+        // 评论id - 计数数据字典
+        Map<Long, Map<Object, Object>> commentIdAndCountMap = Maps.newHashMap();
+        // 遍历未过期的评论 ID 集合
+        for (int i = 0; i < existCommentIds.size(); i++) {
+            // 当前评论 ID
+            Long currentId = Long.valueOf(existCommentIds.get(i).toString());
+            // 从缓存查询结果中，获取对应 Hash
+            Map<Object, Object> hash = (Map<Object, Object>) results.get(i);
+            if (CollUtil.isEmpty(hash)) {
+                expiredCountCommentIds.add(currentId);
+                continue;
+            }
+            // 若存在，则将数据添加到 commentIdAndCountMap 中，方便后续读取
+            commentIdAndCountMap.put(currentId, hash);
+        }
+
+        // 若已过期的计数评论 ID 集合大于 0，说明部分计数数据不在 Redis 缓存中
+        // 需要查询数据库，并将这部分的评论计数 Hash 同步到 Redis 中
+        if (CollUtil.isNotEmpty(expiredCountCommentIds)) {
+            List<CommentDO> commentDOS = commentDOMapper.selectCommentCountByIds(expiredCountCommentIds);
+            commentDOS.forEach(commentDO -> {
+                Long commentDOId = commentDO.getId();
+                HashMap<Object, Object> map = Maps.newHashMap();
+                map.put(RedisKeyConstants.FIELD_LIKE_TOTAL, commentDO.getLikeTotal());
+                Integer level = commentDO.getLevel();
+                // 一级评论 添加评论总数
+                if (Objects.equals(level, CommentLevelEnum.ONE.getCode())) {
+                    map.put(RedisKeyConstants.FIELD_CHILD_COMMENT_TOTAL, commentDO.getChildCommentTotal());
+
+                }
+                commentIdAndCountMap.put(commentDOId, map);
+            });
+            threadPoolTaskExecutor.execute(() -> {
+                redisTemplate.executePipelined(new SessionCallback<>() {
+                    @Override
+                    public Object execute(RedisOperations operations) throws DataAccessException {
+                        commentDOS.forEach(commentDO -> {
+                            String key = RedisKeyConstants.buildCountCommentKey(commentDO.getId());
+                            Integer level = commentDO.getLevel();
+                            // 设置 Field 数据
+                            HashMap<String, Long> map = Maps.newHashMap();
+                            map.put(RedisKeyConstants.FIELD_LIKE_TOTAL, commentDO.getLikeTotal());
+                            // 一级评论 添加评论总数
+                            if (Objects.equals(level, CommentLevelEnum.ONE.getCode())) {
+                                map.put(RedisKeyConstants.FIELD_CHILD_COMMENT_TOTAL, commentDO.getChildCommentTotal());
+                            }
+                            operations.opsForHash().putAll(key, map);
+                        });
+                        return null;
+                    }
+                });
+            });
+        }
+
+        // 遍历VO 设置对应的评论的二级评论数喝点赞数
+        for (FindCommentItemRespVO commentVO : commentVOS) {
+            Long commentId = commentVO.getCommentId();
+            // 若当前这条评论是从数据库中查询出来的, 则无需设置二级评论数、点赞数，以数据库查询出来的为主
+            if (CollUtil.isEmpty(expiredCommentIds) && expiredCommentIds.contains(commentId))
+                continue;
+            // 拿到评论的计数map
+            Map<Object, Object> countMap = commentIdAndCountMap.get(commentId);
+            // 获取并转换点赞数
+            Object likeTotalObj = countMap.get(RedisKeyConstants.FIELD_LIKE_TOTAL);
+            Long likeTotal = likeTotalObj == null ? 0 : Long.parseLong(likeTotalObj.toString());
+            // 获取并转换二级评论数
+            Object childCommentTotalObj = countMap.get(RedisKeyConstants.FIELD_CHILD_COMMENT_TOTAL);
+            Long childCommentTotal = childCommentTotalObj == null ? 0 : Long.parseLong(childCommentTotalObj.toString());
+            // 设置到VO
+            commentVO.setLikeTotal(likeTotal);
+            commentVO.setChildCommentTotal(childCommentTotal);
+            // 拿到评论的第一个回复
+            FindCommentItemRespVO firstReplyCommentVO = commentVO.getFirstReplyComment();
+            if (Objects.nonNull(firstReplyCommentVO)) {
+                // 拿到第一个回复的评论ID
+                Long firstReplyCommentId = firstReplyCommentVO.getCommentId();
+                // 拿到第一个回复的计数map
+                Map<Object, Object> firstReplyCommentCountMap = commentIdAndCountMap.get(firstReplyCommentId);
+                if (CollUtil.isNotEmpty(firstReplyCommentCountMap)) {
+                    // 获取并转换点赞数
+                    Object firstReplyCommentLikeTotalObj = firstReplyCommentCountMap.get(RedisKeyConstants.FIELD_LIKE_TOTAL);
+                    Long firstReplyCommentLikeTotal = firstReplyCommentLikeTotalObj == null ? 0 : Long.parseLong(firstReplyCommentLikeTotalObj.toString());
+                    // 设置到VO
+                    firstReplyCommentVO.setLikeTotal(firstReplyCommentLikeTotal);
+                }
+            }
+        }
     }
 }
