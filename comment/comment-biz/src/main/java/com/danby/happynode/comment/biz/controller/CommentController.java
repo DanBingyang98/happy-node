@@ -1,8 +1,6 @@
 package com.danby.happynode.comment.biz.controller;
 
-import com.danby.happynode.comment.biz.model.vo.FindCommentItemRespVO;
-import com.danby.happynode.comment.biz.model.vo.FindCommentPageListReqVO;
-import com.danby.happynode.comment.biz.model.vo.PublishCommentReqVO;
+import com.danby.happynode.comment.biz.model.vo.*;
 import com.danby.happynode.comment.biz.service.CommentService;
 import com.danby.happynode.framework.biz.operationlog.aspect.ApiOperationLog;
 import com.danby.happynode.framework.common.response.PageResponse;
@@ -30,5 +28,11 @@ public class CommentController {
     @ApiOperationLog(description = "获取评论列表")
     public PageResponse<FindCommentItemRespVO> findCommentPageList(@RequestBody @Validated FindCommentPageListReqVO findCommentPageListReqVO) {
         return commentService.findCommentPageList(findCommentPageListReqVO);
+    }
+
+    @RequestMapping("/child/list")
+    @ApiOperationLog(description = "获取二级评论分页查询")
+    public PageResponse<FindChildCommentItemRespVO> findChildCommentPageList(@RequestBody @Validated FindChildCommentPageListReqVO findChildCommentPageListReqVO) {
+        return commentService.findChildCommentPageList(findChildCommentPageListReqVO);
     }
 }

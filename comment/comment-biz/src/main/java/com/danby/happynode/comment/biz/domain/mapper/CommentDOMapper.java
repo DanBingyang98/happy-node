@@ -90,5 +90,22 @@ public interface CommentDOMapper {
      */
     List<CommentDO> selectHeatComments(@Param("noteId")Long noteId);
 
+    /**
+     * 查询一级评论下子评论总数
+     * @param commentId
+     * @return
+     */
+    Long selectChildCommentTotalById(@Param("commentId") Long commentId);
+
+    /**
+     * 查询二级评论分页数据
+     * @param parentId 一级评论id
+     * @param offset 偏移量
+     * @param pageSize 单页大小
+     * @return
+     */
+    List<CommentDO> selectChildCommentPageList(@Param("parentId") Long parentId,
+                                               @Param("offset") long offset,
+                                               @Param("pageSize") long pageSize);
 
 }

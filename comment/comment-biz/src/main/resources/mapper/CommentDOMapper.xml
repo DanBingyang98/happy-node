@@ -80,6 +80,30 @@
         where note_id = #{noteId} and level=1 order by heat desc limit 500
 
     </select>
+    <select id="selectChildCommentTotalById" resultType="long" parameterType="long">
+        SELECT child_comment_total
+        from t_comment
+        where id = #{commentId}
+          and level = 1
+    </select>
+    <select id="selectChildCommentPageList" resultMap="BaseResultMap" parameterType="map">
+        SELECT id,
+               user_id,
+               note_id,
+               content_uuid,
+               is_content_empty,
+               image_url,
+               like_total,
+               create_time,
+               reply_user_id,
+               parent_id,
+               reply_comment_id
+        FROM t_comment
+        WHERE parent_id = #{parentId}
+          AND level = 2
+        ORDER BY id ASC
+            LIMIT #{offset}, #{pageSize}
+    </select>
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
         delete
         from t_comment
