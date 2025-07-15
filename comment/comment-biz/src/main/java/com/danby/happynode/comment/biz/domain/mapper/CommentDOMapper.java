@@ -120,4 +120,13 @@ public interface CommentDOMapper {
      */
     List<CommentDO> selectCommentCountByIds(@Param("commentIds") List<Long> commentIds);
 
+    /**
+     * 查询子评论
+     * @param parentId
+     * @param limit
+     * @return
+     */
+    List<CommentDO> selectChildCommentsByParentIdAndLimit(@Param("parentId") Long parentId,
+                                                          @Param("limit") int limit);
+
 }

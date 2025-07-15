@@ -266,7 +266,29 @@ public class CommentServiceImpl implements CommentService {
         long offset = PageResponse.getOffset(pageNo, pageSize) + 1;
         // 分页返参 VO
         List<FindChildCommentItemRespVO> childCommentRespVOS = Lists.newArrayList();
-        // TODO 从缓存中查
+
+        // TODO 从缓存中查 二级评论不放在本地缓存，放在redis缓存
+        
+        String countCommentKey = RedisKeyConstants.buildCountCommentKey(parentCommentId);
+        Number countCommentValue = (Number) redisTemplate.opsForHash().get(countCommentKey, RedisKeyConstants.FIELD_CHILD_COMMENT_TOTAL);
+        long count = Objects.isNull(countCommentValue) ? 0 : countCommentValue.longValue();
+        // 如果redis没数据 从数据查询
+        if (Objects.isNull(countCommentValue)) {
+            // 查询一级评论下子评论的总数 (直接查询 t_comment 表的 child_comment_total 字段，提升查询性能, 避免 count(*))
+            Long dbCount = commentDOMapper.selectChildCommentTotalById(parentCommentId);
+            // 若从数据库查询的为空，则抛出异常
+            if (Objects.isNull(dbCount))
+                throw new BusinessException(ResponseCodeEnum.PARENT_COMMENT_NOT_FOUND);
+            count = dbCount;
+            final long finalCount = count;
+            // 异步将二级评论总数缓存到redis
+            threadPoolTaskExecutor.execute(() -> syncCommentCount2Redis(countCommentKey, finalCount));
+        }
+        // 若子评论总数为 0，直接返参
+        if (count == 0) {
+            return PageResponse.success(null, pageNo, 0);
+        }
+
 
         // 查询一级评论下子评论的总数 (直接查询 t_comment 表的 child_comment_total 字段，提升查询性能, 避免 count(*))
         Long childCommentTotal = commentDOMapper.selectChildCommentTotalById(parentCommentId);
@@ -316,7 +338,7 @@ public class CommentServiceImpl implements CommentService {
         if (CollUtil.isNotEmpty(findUserByIdRespDTOS))
             userIdAndUserInfoMap = findUserByIdRespDTOS.stream()
                     .collect(Collectors.toMap(FindUserByIdRespDTO::getId, dto -> dto));
-        // TODO 拼装响应VO
+        // 拼装响应VO
         for (CommentDO childCommentDO : childCommentDOS) {
             // 构建 VO 实体类
             Long userId = childCommentDO.getUserId();
@@ -356,6 +378,25 @@ public class CommentServiceImpl implements CommentService {
             childCommentRespVOS.add(findChildCommentItemRespVO);
         }
         return PageResponse.success(childCommentRespVOS, pageNo, childCommentTotal, pageSize);
+    }
+
+    /***
+     * 将二级评论数同步到 Redis 中
+     * @param countCommentKey
+     * @param count
+     */
+    private void syncCommentCount2Redis(String countCommentKey, long count) {
+        redisTemplate.executePipelined(new SessionCallback<>() {
+            @Override
+            public Object execute(RedisOperations operations) throws DataAccessException {
+                operations.opsForHash()
+                        .put(countCommentKey, RedisKeyConstants.FIELD_CHILD_COMMENT_TOTAL, count);
+                // 随机过期时间 (保底1小时 + 随机时间)，单位：秒
+                long expireTime = 60*60 + RandomUtil.randomInt(4*60*60);
+                operations.expire(countCommentKey, expireTime, TimeUnit.SECONDS);
+                return null;
+            }
+        });
     }
 
     /**
@@ -488,6 +529,12 @@ public class CommentServiceImpl implements CommentService {
         }
     }
 
+    /**
+     * 同步评论热度到redis缓存
+     *
+     * @param countCommentTotalKey
+     * @param noteId
+     */
     private void syncHeatComments2Redis(String countCommentTotalKey, Long noteId) {
         List<CommentDO> commentDOS = commentDOMapper.selectHeatComments(noteId);
         if (CollUtil.isNotEmpty(commentDOS)) {

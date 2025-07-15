@@ -42,6 +42,11 @@ public class RedisKeyConstants {
      */
     public static final String FIELD_LIKE_TOTAL = "likeTotal";
 
+    /***
+     * Key 前缀：二级评论分页 ZSET
+     */
+    public static final String CHILD_COMMENT_LIST_KEY_PREFIX = "comment:childList:";
+
     /**
      * 构建完整 HaveFirstReplyCommentKey
      *
@@ -89,5 +94,14 @@ public class RedisKeyConstants {
      */
     public static String buildCountCommentKey(Long commentId) {
         return COUNT_COMMENT_KEY_PREFIX + commentId;
+    }
+
+    /**
+     * 构建子评论分页 ZSET 完整 KEY
+     * @param commentId
+     * @return
+     */
+    public static String buildChildCommentListKey(Long commentId) {
+        return CHILD_COMMENT_LIST_KEY_PREFIX + commentId;
     }
 }

@@ -68,22 +68,21 @@ public class CountNoteChildCommentConsumer implements RocketMQListener<String> {
                 throw new RuntimeException(e);
             }
         }
-        // 过滤出二级评论，并按 parent_id 分组
+        // 过滤出二级评论，并按 parent_id 分组  parentId -> [ commentId, commentId,... ]
         Map<Long, List<CountPublishCommentMqDTO>> groupMap = countPublishCommentMqDTOS.stream()
                 .filter(countPublishCommentMqDTO -> Objects.equals(countPublishCommentMqDTO.getLevel(), CommentLevelEnum.TWO.getCode()))
                 .collect(Collectors.groupingBy(CountPublishCommentMqDTO::getParentId)); // 按 parent_id 分组
         if (groupMap.isEmpty()) return;
         groupMap.forEach((parentId, levelTwoCommentMqDTOS) -> {
-                    long count = levelTwoCommentMqDTOS.size();
-                    // TODO 更新redis缓存中的评论计数数据
-            String key = RedisKeyConstants.buildCountCommentKey(parentId);
-            Boolean hasKey = redisTemplate.hasKey(key);
-            if (hasKey) {
-                redisTemplate.opsForHash().increment(key, RedisKeyConstants.FIELD_CHILD_COMMENT_TOTAL, count);
-            }
+                    int count = levelTwoCommentMqDTOS.size();
+                    String key = RedisKeyConstants.buildCountCommentKey(parentId);
+                    Boolean hasKey = redisTemplate.hasKey(key);
+                    if (hasKey) {
+                        redisTemplate.opsForHash().increment(key, RedisKeyConstants.FIELD_CHILD_COMMENT_TOTAL, count);
+                    }
 
-
-            commentDOMapper.updateChildCommentTotal(parentId, levelTwoCommentMqDTOS.size());
+                    // 更新一级评论的下级评论总数，进行累加操作
+                    commentDOMapper.updateChildCommentTotal(parentId, count);
                 }
         );
         // 获取字典中所有评论 ID
