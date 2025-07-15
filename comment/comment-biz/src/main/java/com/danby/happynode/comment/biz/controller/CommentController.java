@@ -7,6 +7,7 @@ import com.danby.happynode.framework.common.response.PageResponse;
 import com.danby.happynode.framework.common.response.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,21 +19,28 @@ public class CommentController {
     @Autowired
     private CommentService commentService;
 
-    @RequestMapping("/publish")
+    @PostMapping("/publish")
     @ApiOperationLog(description = "发布评论")
     public Response<?> publishComment(@RequestBody @Validated PublishCommentReqVO publishCommentReqVO) {
         return commentService.publishComment(publishCommentReqVO);
     }
 
-    @RequestMapping("/list")
+    @PostMapping("/list")
     @ApiOperationLog(description = "获取评论列表")
     public PageResponse<FindCommentItemRespVO> findCommentPageList(@RequestBody @Validated FindCommentPageListReqVO findCommentPageListReqVO) {
         return commentService.findCommentPageList(findCommentPageListReqVO);
     }
 
-    @RequestMapping("/child/list")
+    @PostMapping("/child/list")
     @ApiOperationLog(description = "获取二级评论分页查询")
     public PageResponse<FindChildCommentItemRespVO> findChildCommentPageList(@RequestBody @Validated FindChildCommentPageListReqVO findChildCommentPageListReqVO) {
         return commentService.findChildCommentPageList(findChildCommentPageListReqVO);
     }
+
+    @PostMapping("/like")
+    @ApiOperationLog(description = "评论点赞")
+    public Response<?> likeComment(@RequestBody @Validated LikeCommentReqVO likeCommentReqVO) {
+        return commentService.likeComment(likeCommentReqVO);
+    }
+
 }

@@ -1,6 +1,7 @@
 package com.danby.happynode.count.biz.consumer;
 
 import com.danby.happynode.count.biz.constant.MQConstants;
+import com.danby.happynode.count.biz.constant.RedisKeyConstants;
 import com.danby.happynode.count.biz.domain.mapper.NoteCountDOMapper;
 import com.danby.happynode.count.biz.model.dto.CountPublishCommentMqDTO;
 import com.danby.happynode.framework.common.util.JsonUtils;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -33,6 +35,8 @@ public class CountNoteCommentConsumer implements RocketMQListener<String> {
             .linger(Duration.ofSeconds(1)) // 多久聚合一次（1s 一次）
             .setConsumerEx(this::consumeMessage) // 设置消费者方法
             .build();
+    @Autowired
+    private RedisTemplate<String,Object> redisTemplate;
 
     @Override
     public void onMessage(String body) {
@@ -57,6 +61,12 @@ public class CountNoteCommentConsumer implements RocketMQListener<String> {
         Map<Long, List<CountPublishCommentMqDTO>> groupMap = countPublishCommentMqDTOS.stream().collect(Collectors.groupingBy(CountPublishCommentMqDTO::getNoteId));
         groupMap.forEach((noteId, value) -> {
             int count = value.size();
+            // 更新redis缓存中的评论计数
+            String key = RedisKeyConstants.buildCountCommentKey(noteId);
+            boolean hasKey = redisTemplate.hasKey(key);
+            if (hasKey) {
+                redisTemplate.opsForHash().increment(key, RedisKeyConstants.FIELD_COMMENT_TOTAL, count);
+            }
             if (count > 0)
                 noteCountDOMapper.insertOrUpdateCommentTotalByNoteId(count, noteId);
         });

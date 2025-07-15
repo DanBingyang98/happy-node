@@ -8,10 +8,15 @@ import com.danby.framework.context.holder.LoginUserContextHolder;
 import com.danby.happynode.comment.biz.constant.MQConstants;
 import com.danby.happynode.comment.biz.constant.RedisKeyConstants;
 import com.danby.happynode.comment.biz.domain.dataobject.CommentDO;
+import com.danby.happynode.comment.biz.domain.dataobject.CommentLikeDO;
 import com.danby.happynode.comment.biz.domain.mapper.CommentDOMapper;
+import com.danby.happynode.comment.biz.domain.mapper.CommentLikeDOMapper;
 import com.danby.happynode.comment.biz.domain.mapper.NoteCountDOMapper;
 import com.danby.happynode.comment.biz.enums.CommentLevelEnum;
+import com.danby.happynode.comment.biz.enums.CommentLikeLuaResultEnum;
+import com.danby.happynode.comment.biz.enums.LikeUnlikeCommentTypeEnum;
 import com.danby.happynode.comment.biz.enums.ResponseCodeEnum;
+import com.danby.happynode.comment.biz.model.dto.LikeUnlikeCommentMqDTO;
 import com.danby.happynode.comment.biz.model.dto.PublishCommentMqDTO;
 import com.danby.happynode.comment.biz.model.vo.*;
 import com.danby.happynode.comment.biz.retry.SendMQRetryHelper;
@@ -37,10 +42,20 @@ import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
+import org.apache.rocketmq.client.producer.SendCallback;
+import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.connection.RedisStringCommands;
 import org.springframework.data.redis.core.*;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.types.Expiration;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.scripting.support.ResourceScriptSource;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -68,6 +83,8 @@ public class CommentServiceImpl implements CommentService {
     private RedisTemplate<String, Object> redisTemplate;
     @Autowired
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+    @Autowired
+    private RocketMQTemplate rocketMQTemplate;
     /**
      * 评论详情本地缓存
      */
@@ -76,6 +93,8 @@ public class CommentServiceImpl implements CommentService {
             .maximumSize(10000) // 设置缓存的最大容量为 10000 个条目
             .expireAfterWrite(1, TimeUnit.HOURS) // 设置缓存条目在写入后 1 小时过期
             .build();
+    @Autowired
+    private CommentLikeDOMapper commentLikeDOMapper;
 
 
     @Override
@@ -205,10 +224,20 @@ public class CommentServiceImpl implements CommentService {
                     List<String> commentIdKeys = localCacheExpiredCommentIds.stream().map(RedisKeyConstants::buildCommentDetailKey).toList();
                     // MGET 批量获取评论数据
                     List<Object> commentsJsonList = redisTemplate.opsForValue().multiGet(commentIdKeys);
+                    List<String> childCommentDetailStrList = Lists.newArrayList();
+                    commentsJsonList.forEach(childCommentDetailJson -> {
+                        if (childCommentDetailJson instanceof String) {
+                            childCommentDetailStrList.add((String) childCommentDetailJson);
+                        } else if (childCommentDetailJson instanceof LinkedHashMap) {
+                            childCommentDetailStrList.add(JsonUtils.toJsonString(childCommentDetailJson));
+                        } else {
+                            childCommentDetailStrList.add(childCommentDetailJson.toString());
+                        }
+                    });
                     // 可能存在部分评论不在缓存中，已经过期被删除，这些评论 ID 需要提取出来，等会查数据库
                     List<Long> expiredCommentIds = new ArrayList<>();
-                    for (int i = 0; i < commentsJsonList.size(); i++) {
-                        String commentJson = (String) commentsJsonList.get(i);
+                    for (int i = 0; i < childCommentDetailStrList.size(); i++) {
+                        String commentJson = childCommentDetailStrList.get(i);
                         if (Objects.nonNull(commentJson)) {
                             // 缓存中存在的评论 Json，直接转换为 VO 添加到返参集合中
                             FindCommentItemRespVO findCommentItemRespVO = JsonUtils.parseObject(commentJson, FindCommentItemRespVO.class);
@@ -311,10 +340,20 @@ public class CommentServiceImpl implements CommentService {
                         .toList();
                 // MGET 批量获取评论数据
                 List<Object> childCommentDetailJsonList = redisTemplate.opsForValue().multiGet(childCommentKeys);
+                List<String> childCommentDetailStrList = Lists.newArrayList();
+                childCommentDetailJsonList.forEach(childCommentDetailJson -> {
+                    if (childCommentDetailJson instanceof String) {
+                        childCommentDetailStrList.add((String) childCommentDetailJson);
+                    } else if (childCommentDetailJson instanceof LinkedHashMap) {
+                        childCommentDetailStrList.add(JsonUtils.toJsonString(childCommentDetailJson));
+                    } else {
+                        childCommentDetailStrList.add(childCommentDetailJson.toString());
+                    }
+                });
                 // 可能存在部分评论不在缓存中，已经过期被删除，这些评论 ID 需要提取出来，等会查数据库
                 List<Long> expiredChildCommentIds = Lists.newArrayList();
-                for (int i = 0; i < childCommentDetailJsonList.size(); i++) {
-                    String childCommentDetailJsonStr = (String) childCommentDetailJsonList.get(i);
+                for (int i = 0; i < childCommentDetailStrList.size(); i++) {
+                    String childCommentDetailJsonStr = childCommentDetailStrList.get(i);
                     Long childCommentId = Long.valueOf(childCommentIdList.get(i).toString());
                     // 如果childCommentDetailJsonStr 不是空就添加到返回参数中
                     if (Objects.nonNull(childCommentDetailJsonStr)) {
@@ -350,6 +389,145 @@ public class CommentServiceImpl implements CommentService {
 
 
         return PageResponse.success(childCommentItemRespVOS, pageNo, count, pageSize);
+    }
+
+    @Override
+    public Response<?> likeComment(LikeCommentReqVO likeCommentReqVO) {
+        // 1. 校验被点赞的评论是否存在
+        Long commentId = likeCommentReqVO.getCommentId();
+        checkCommentIsExist(commentId);
+        // 2. 判断目标评论，是否已经被点赞
+        Long userId = LoginUserContextHolder.getUserId();
+        String bloomCommentLikesKey = RedisKeyConstants.buildBloomCommentLikesKey(userId);
+        // 创建lua脚本
+        DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
+        // Lua 脚本路径
+        redisScript.setScriptSource(new ResourceScriptSource(new ClassPathResource("/lua/bloom_comment_like_check.lua")));
+        // lua脚本返回类型
+        redisScript.setResultType(Long.class);
+        // 执行lua脚本
+        Long luaResult = redisTemplate.execute(redisScript, Collections.singletonList(bloomCommentLikesKey), commentId);
+        CommentLikeLuaResultEnum commentLikeLuaResultEnum = CommentLikeLuaResultEnum.valueOf(luaResult);
+        if (Objects.isNull(commentLikeLuaResultEnum)) {
+            throw new BusinessException(ResponseCodeEnum.PARAM_NOT_VALID);
+        }
+        switch (commentLikeLuaResultEnum) {
+            // Redis 中布隆过滤器不存在
+            case NOT_EXIST -> {
+                int count = commentLikeDOMapper.selectCountByUserIdAndCommentId(userId, commentId);
+                long expireSeconds = 60 * 60 + RandomUtil.randomInt(60 * 60);
+                if (count > 0) {
+                    // count > 0 表示已经被点赞了
+                    // 异步初始化布隆过滤器
+                    // 保底1小小时+随机秒数
+                    threadPoolTaskExecutor.execute(() ->
+                            batchAddCommentLike2BloomAndExpire(userId, expireSeconds, bloomCommentLikesKey));
+                    throw new BusinessException(ResponseCodeEnum.COMMENT_ALREADY_LIKED);
+                }
+                // 若目标评论未被点赞，查询当前用户是否有点赞其他评论，有则同步初始化布隆过滤器
+                batchAddCommentLike2BloomAndExpire(userId, expireSeconds, bloomCommentLikesKey);
+                // 将当前评论点赞添加到布隆过滤器
+                // Lua 脚本路径
+                redisScript.setScriptSource(new ResourceScriptSource(new ClassPathResource("/lua/bloom_add_comment_like_and_expire.lua")));
+                // 返回值类型
+                redisScript.setResultType(Long.class);
+                redisTemplate.execute(redisScript, Collections.singletonList(bloomCommentLikesKey), commentId, expireSeconds);
+            }
+            // 目标评论已经被点赞 (可能存在误判，需要进一步确认)
+            case COMMENT_LIKED -> {
+                int count = commentLikeDOMapper.selectCountByUserIdAndCommentId(userId, commentId);
+                if (count > 0) {
+                    throw new BusinessException(ResponseCodeEnum.COMMENT_ALREADY_LIKED);
+                }
+
+            }
+
+            case COMMENT_LIKE_SUCCESS -> {
+
+            }
+        }
+
+
+        // 3. 发送 MQ, 异步将评论点赞记录落库
+        // 构建消息体 DTO
+        LikeUnlikeCommentMqDTO likeUnlikeCommentMqDTO = LikeUnlikeCommentMqDTO.builder()
+                .userId(userId)
+                .commentId(commentId)
+                .type(LikeUnlikeCommentTypeEnum.LIKE.getCode()) // 点赞评论
+                .createTime(LocalDateTime.now())
+                .build();
+        // 构建消息对象，并将 DTO 转成 Json 字符串设置到消息体中
+        Message<String> message = MessageBuilder.withPayload(JsonUtils.toJsonString(likeUnlikeCommentMqDTO)).build();
+        // 通过冒号连接, 可让 MQ 发送给主题 Topic 时，携带上标签 Tag
+        String destination = MQConstants.TOPIC_COMMENT_LIKE_OR_UNLIKE + ":" + MQConstants.TAG_LIKE;
+        // MQ 分区键
+        String hashKey = String.valueOf(userId);
+        // 异步发送 MQ 消息，提升接口响应速度
+        rocketMQTemplate.asyncSendOrderly(destination, message, hashKey, new SendCallback() {
+            @Override
+            public void onSuccess(SendResult sendResult) {
+                log.info("==> 【评论点赞】MQ 发送成功，SendResult: {}", sendResult);
+            }
+
+            @Override
+            public void onException(Throwable throwable) {
+                log.error("==> 【评论点赞】MQ 发送异常: ", throwable);
+            }
+        });
+        return Response.success();
+    }
+
+    /**
+     * 初始化评论点赞布隆过滤器
+     *
+     * @param userId
+     * @param expireSeconds
+     * @param bloomCommentLikesKey
+     * @return
+     */
+    private void batchAddCommentLike2BloomAndExpire(Long userId, long expireSeconds, String bloomCommentLikesKey) {
+        try {
+            List<CommentLikeDO> commentLikeDOS = commentLikeDOMapper.selectByUserId(userId);
+            if (CollUtil.isNotEmpty(commentLikeDOS)) {
+                DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+                // Lua 脚本路径
+                script.setScriptSource(new ResourceScriptSource(new ClassPathResource("/lua/bloom_batch_add_comment_like_and_expire.lua")));
+                // 返回值类型
+                script.setResultType(Long.class);
+                // 构建 Lua 参数
+                ArrayList<Object> luaArgs = Lists.newArrayList();
+                // 将每个点赞的评论 ID 传入
+                commentLikeDOS.forEach(commentLikeDO -> luaArgs.add(commentLikeDO.getCommentId()));
+                // 最后一个参数是过期时间（秒）
+                luaArgs.add(expireSeconds);
+                redisTemplate.execute(script, Collections.singletonList(bloomCommentLikesKey), luaArgs.toArray());
+            }
+        } catch (Exception e) {
+            log.error("## 异步初始化【评论点赞】布隆过滤器异常: ", e);
+        }
+    }
+
+    /**
+     * 校验被点赞的评论是否存在
+     *
+     * @param commentId
+     */
+    private void checkCommentIsExist(Long commentId) {
+        // 1 从本地缓存LOCAL_CACHE 中查询
+        String localCacheJson = LOCAL_CACHE.getIfPresent(commentId);
+        // 2 从本地缓存LOCAL_CACHE中没有，从 Redis 中查询
+        if (Objects.isNull(localCacheJson)) {
+            String commentDetailKey = RedisKeyConstants.buildCommentDetailKey(commentId);
+            boolean hasKey = redisTemplate.hasKey(commentDetailKey);
+            // 3 redis中没有，则从数据库中查询
+            if (!hasKey) {
+                CommentDO commentDO = commentDOMapper.selectByPrimaryKey(commentId);
+                // 若数据库中，该评论也不存在，抛出业务异常
+                if (Objects.isNull(commentDO)) {
+                    throw new BusinessException(ResponseCodeEnum.COMMENT_NOT_FOUND);
+                }
+            }
+        }
     }
 
     /**
@@ -414,7 +592,7 @@ public class CommentServiceImpl implements CommentService {
         // 遍历未过期的评论Id集合
         for (int i = 0; i < existCommentIds.size(); i++) {
             // 当前评论 ID
-            Long currentCommentId = Long.valueOf(expiredCountCommentIds.get(i));
+            Long currentCommentId = Long.valueOf(existCommentIds.get(i).toString());
             // 从redis查询的结果中获取对应的CountMap
             Map<Object, Object> hash = (Map<Object, Object>) result.get(i);
             // 若 Hash 结果为空，说明缓存中不存在，添加到 expiredCountCommentIds 中，保存一下
@@ -576,15 +754,22 @@ public class CommentServiceImpl implements CommentService {
             map.forEach((key, value) -> {
                         int expireTime = 60 * 60 + RandomUtil.randomInt(4 * 60 * 60);
                         // 批量写入并设置过期时间
-                        connection.setEx(redisTemplate.getStringSerializer().serialize(key),
-                                expireTime,
-                                redisTemplate.getStringSerializer().serialize(value));
+                        connection.set(redisTemplate.getStringSerializer().serialize(key),
+                                redisTemplate.getStringSerializer().serialize(value),
+                                Expiration.seconds(expireTime),
+                                RedisStringCommands.SetOption.upsert()  // 设置写入选项（UPSERT = 无论 key 是否存在都设置）
+                        );
                     }
             );
             return null;
         });
     }
 
+    /***
+     * 将二级评论同步到 Redis 中
+     * @param parentCommentId
+     * @param childCommentZSetKey
+     */
     private void syncChildComments2Redis(Long parentCommentId, String childCommentZSetKey) {
         List<CommentDO> commentDOS = commentDOMapper.selectChildCommentsByParentIdAndLimit(parentCommentId, 6 * 10);
         if (CollUtil.isNotEmpty(commentDOS)) {
@@ -865,7 +1050,7 @@ public class CommentServiceImpl implements CommentService {
             }
         }
         // 已失效的Hash评论ID
-        Map<Long, Map<Object, Object>> commentIdAndCountMap= getCommentCountDataAndSync2RedisHash(existCommentIds);
+        Map<Long, Map<Object, Object>> commentIdAndCountMap = getCommentCountDataAndSync2RedisHash(existCommentIds);
 
         // 遍历VO 设置对应的评论的二级评论数喝点赞数
         for (FindCommentItemRespVO commentVO : commentVOS) {
