@@ -68,6 +68,14 @@
       </if>
     </trim>
   </insert>
+  <insert id="batchInsert" parameterType="list">
+    INSERT INTO t_comment_like (comment_id,user_id,create_time)
+    VALUES
+    <foreach collection="likes" item="like" open="(" separator="," close=")">
+      (#{like.commentId},#{like.userId},#{like.createTime})
+    </foreach>
+    ON DUPLICATE KEY UPDATE id=id
+  </insert>
   <update id="updateByPrimaryKeySelective" parameterType="com.danby.happynode.comment.biz.domain.dataobject.CommentLikeDO">
     update t_comment_like
     <set>
@@ -90,4 +98,14 @@
       create_time = #{createTime,jdbcType=TIMESTAMP}
     where id = #{id,jdbcType=BIGINT}
   </update>
+  
+  <delete id="batchDelete" parameterType="map">
+    DELETE FROM t_comment_like
+    WHERE (comment_id,user_id) IN
+    <foreach collection="unlikes" item="unlike" open="(" separator="," close=")">
+      (#{unlike.commentId}, #{unlike.userId})
+    </foreach>
+  </delete>
+
+
 </mapper>

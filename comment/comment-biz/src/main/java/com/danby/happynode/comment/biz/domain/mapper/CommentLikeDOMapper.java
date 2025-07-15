@@ -1,6 +1,7 @@
 package com.danby.happynode.comment.biz.domain.mapper;
 
 import com.danby.happynode.comment.biz.domain.dataobject.CommentLikeDO;
+import com.danby.happynode.comment.biz.model.dto.LikeUnlikeCommentMqDTO;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -28,5 +29,26 @@ public interface CommentLikeDOMapper {
     int selectCountByUserIdAndCommentId(@Param("userId") Long userId,
                                         @Param("commentId") Long commentId);
 
+    /**
+     * 查询某个用户点赞过的所有评论
+     * @param userId
+     * @return
+     */
     List<CommentLikeDO> selectByUserId(@Param("userId") Long userId);
+
+    /**
+     * 批量删除点赞记录
+     * @param unlikes
+     * @return
+     */
+    int batchDelete(@Param("unlikes")List<LikeUnlikeCommentMqDTO> unlikes);
+
+    /**
+     * 批量添加点赞记录
+     * @param likes
+     * @return
+     */
+    int batchInsert(@Param("likes") List<LikeUnlikeCommentMqDTO> likes);
+
+
 }
