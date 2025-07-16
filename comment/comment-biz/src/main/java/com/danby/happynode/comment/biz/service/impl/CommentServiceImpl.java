@@ -480,7 +480,7 @@ public class CommentServiceImpl implements CommentService {
         Long commentId = unLikeCommentReqVO.getCommentId();
         // 1. 校验评论是否存在
         checkCommentIsExist(commentId);
-        // TODO: 2. 校验评论是否被点赞过
+        // 2. 校验评论是否被点赞过
         // 当前登录用户ID
         Long userId = LoginUserContextHolder.getUserId();
         String bloomUserCommentLikeListKey = RedisKeyConstants.buildBloomCommentLikesKey(userId);

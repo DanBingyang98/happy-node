@@ -3,6 +3,7 @@ package com.danby.happynode.kv.biz.service;
 import com.danby.happynode.framework.common.response.Response;
 import com.danby.happynode.kv.dto.req.BatchAddCommentContentReqDTO;
 import com.danby.happynode.kv.dto.req.BatchFindCommentContentReqDTO;
+import com.danby.happynode.kv.dto.req.DeleteCommentContentReqDTO;
 
 public interface CommentContentService {
     /**
@@ -20,4 +21,11 @@ public interface CommentContentService {
      * @return
      */
     Response<?> batchFindCommentContent(BatchFindCommentContentReqDTO batchFindCommentContentReqDTO);
+
+    /**
+     * 删除评论内容
+     * @param deleteCommentContentReqDTO
+     * @return
+     */
+    Response<?> deleteCommentContent(DeleteCommentContentReqDTO deleteCommentContentReqDTO);
 }

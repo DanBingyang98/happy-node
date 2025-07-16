@@ -18,9 +18,18 @@ public interface CommentDOMapper {
 
     /**
      * 更新一级评论的子评论总数
+     *
      * @param parentId
      * @param count
      * @return
      */
     int updateChildCommentTotal(@Param("parentId") Long parentId, @Param("count") int count);
+
+    /**
+     * 更新评论点赞数
+     * @param count
+     * @param commentId
+     * @return
+     */
+    int updateLikeTotalByCommentId(@Param("commentId") Long commentId, @Param("count") int count);
 }
