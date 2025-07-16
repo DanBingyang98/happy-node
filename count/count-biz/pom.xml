@@ -99,6 +99,11 @@
             <groupId>com.github.phantomthief</groupId>
             <artifactId>buffer-trigger</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.danby.happynode.count</groupId>
+            <artifactId>count-api</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

@@ -18,6 +18,7 @@ public interface UserCountDOMapper {
 
     /**
      * 添加或更新粉丝总数
+     *
      * @param count
      * @param userId
      * @return
@@ -26,6 +27,7 @@ public interface UserCountDOMapper {
 
     /**
      * 添加或更新关注总数
+     *
      * @param count
      * @param userId
      * @return
@@ -34,6 +36,7 @@ public interface UserCountDOMapper {
 
     /**
      * 添加记录或更新笔记收藏数
+     *
      * @param count
      * @param noteId
      * @return
@@ -42,6 +45,7 @@ public interface UserCountDOMapper {
 
     /**
      * 添加记录或更新笔记点赞数
+     *
      * @param count
      * @param userId
      * @return
@@ -50,9 +54,18 @@ public interface UserCountDOMapper {
 
     /**
      * 添加记录或更新笔记发布数
+     *
      * @param count
      * @param userId
      * @return
      */
     int insertOrUpdateNoteTotalByUserId(@Param("count") Long count, @Param("userId") Long userId);
+
+    /**
+     * 根据用户 ID 查询
+     *
+     * @param userId
+     * @return
+     */
+    UserCountDO selectByUserId(@Param("userId") Long userId);
 }

@@ -324,6 +324,12 @@
                 <version>${revision}</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.danby.happynode.count</groupId>
+                <artifactId>count-api</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
         </dependencies>
 
 
