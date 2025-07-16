@@ -42,5 +42,11 @@ public class CommentController {
     public Response<?> likeComment(@RequestBody @Validated LikeCommentReqVO likeCommentReqVO) {
         return commentService.likeComment(likeCommentReqVO);
     }
+    @PostMapping("/unlike")
+    @ApiOperationLog(description = "评论点赞")
+    public Response<?> unLikeComment(@RequestBody @Validated UnLikeCommentReqVO unLikeCommentReqVO) {
+        return commentService.unlikeComment(unLikeCommentReqVO);
+    }
+
 
 }

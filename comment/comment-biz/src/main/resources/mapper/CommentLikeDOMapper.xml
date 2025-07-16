@@ -71,7 +71,7 @@
   <insert id="batchInsert" parameterType="list">
     INSERT INTO t_comment_like (comment_id,user_id,create_time)
     VALUES
-    <foreach collection="likes" item="like" open="(" separator="," close=")">
+    <foreach collection="likes" item="like" separator=",">
       (#{like.commentId},#{like.userId},#{like.createTime})
     </foreach>
     ON DUPLICATE KEY UPDATE id=id

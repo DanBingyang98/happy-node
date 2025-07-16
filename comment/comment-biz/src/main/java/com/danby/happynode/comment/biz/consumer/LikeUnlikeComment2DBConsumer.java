@@ -68,7 +68,7 @@ public class LikeUnlikeComment2DBConsumer {
 
                 for (MessageExt msg : msgs) {
                     String tag = msg.getTags();
-                    String msgJson  = new String(msg.getBody());
+                    String msgJson = new String(msg.getBody());
                     log.info("==> 【评论点赞、取消点赞】Consumer - Tag: {}, Received message: {}", tag, msgJson);
                     LikeUnlikeCommentMqDTO likeUnlikeCommentMqDTO = JsonUtils.parseObject(msgJson, LikeUnlikeCommentMqDTO.class);
                     likeUnlikeCommentMqDTOS.add(likeUnlikeCommentMqDTO);
@@ -77,10 +77,10 @@ public class LikeUnlikeComment2DBConsumer {
                 Map<Long, List<LikeUnlikeCommentMqDTO>> commentIdAndListMap = likeUnlikeCommentMqDTOS.stream()
                         .collect(Collectors.groupingBy(LikeUnlikeCommentMqDTO::getCommentId));
 
-                ArrayList<LikeUnlikeCommentMqDTO> finalLikeUnlikeCommentMqDTOS  = Lists.newArrayList();
+                ArrayList<LikeUnlikeCommentMqDTO> finalLikeUnlikeCommentMqDTOS = Lists.newArrayList();
                 commentIdAndListMap.forEach((commentId, ops) -> {
                     // 优化：若某个用户对某评论，多次操作，如点赞 -> 取消点赞 -> 点赞，需进行操作合并，只提取最后一次操作，进一步降低操作数据库的频率
-                    ops.stream()
+                    Map<Long, LikeUnlikeCommentMqDTO> userOps = ops.stream()
                             .collect(Collectors.toMap(
                                     LikeUnlikeCommentMqDTO::getUserId, // 以发布评论的用户 ID 作为 Map 的键
                                     Function.identity(), // 直接使用 DTO 对象本身作为 Map 的值
@@ -88,6 +88,8 @@ public class LikeUnlikeComment2DBConsumer {
                                     (oldValue, newValue) ->
                                             oldValue.getCreateTime().isAfter(newValue.getCreateTime()) ? oldValue : newValue
                             ));
+
+                    finalLikeUnlikeCommentMqDTOS.addAll(userOps.values());
                 });
 
                 // TODO:
@@ -108,6 +110,7 @@ public class LikeUnlikeComment2DBConsumer {
 
     /**
      * 批量操作数据库
+     *
      * @param finalLikeUnlikeCommentMqDTOS
      */
     private void executeBatchSQL(ArrayList<LikeUnlikeCommentMqDTO> finalLikeUnlikeCommentMqDTOS) {

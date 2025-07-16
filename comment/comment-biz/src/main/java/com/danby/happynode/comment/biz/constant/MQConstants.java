@@ -27,4 +27,9 @@ public interface MQConstants {
      */
     String TAG_LIKE = "Like";
 
+    /**
+     * Tag 标签：取消点赞
+     */
+    String TAG_UNLIKE = "UnLike";
+
 }
