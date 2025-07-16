@@ -10,4 +10,4 @@ end
 local expireTime  = ARGV[#ARGV]
 -- 设置过期时间
 redis.call('EXPIRE', key, expireTime )
-reutrn 0
+return 0
