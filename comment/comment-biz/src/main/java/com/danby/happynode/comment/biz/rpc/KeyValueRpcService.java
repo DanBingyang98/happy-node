@@ -4,16 +4,14 @@ import com.danby.happynode.comment.biz.model.bo.CommentBO;
 import com.danby.happynode.framework.common.constant.DateConstants;
 import com.danby.happynode.framework.common.response.Response;
 import com.danby.happynode.kv.dto.api.KeyValueFeign;
-import com.danby.happynode.kv.dto.req.BatchAddCommentContentReqDTO;
-import com.danby.happynode.kv.dto.req.BatchFindCommentContentReqDTO;
-import com.danby.happynode.kv.dto.req.CommentContentReqDTO;
-import com.danby.happynode.kv.dto.req.FindCommentContentReqDTO;
+import com.danby.happynode.kv.dto.req.*;
 import com.danby.happynode.kv.dto.resp.FindCommentContentRespDTO;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -59,6 +57,20 @@ public class KeyValueRpcService {
             return null;
         }
         return response.getData();
-
     }
+
+    public boolean deleteCommentContent(Long noteId, LocalDateTime createTime, String contentId) {
+        DeleteCommentContentReqDTO build = DeleteCommentContentReqDTO.builder()
+                .noteId(noteId)
+                .yearMonth(DateConstants.DATE_FORMAT_Y_M.format(createTime))
+                .contentId(contentId)
+                .build();
+        // 调用 KV 存储服务
+        Response<?> response = keyValueFeign.deleteCommentContent(build);
+        if (!response.isSuccess()) {
+            throw new RuntimeException("删除评论内容失败");
+        }
+        return true;
+    }
+
 }

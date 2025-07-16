@@ -5,13 +5,11 @@ import com.danby.happynode.framework.common.response.Response;
 import com.danby.happynode.kv.biz.service.CommentContentService;
 import com.danby.happynode.kv.dto.req.BatchAddCommentContentReqDTO;
 import com.danby.happynode.kv.dto.req.BatchFindCommentContentReqDTO;
+import com.danby.happynode.kv.dto.req.DeleteCommentContentReqDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/kv")
@@ -31,5 +29,11 @@ public class CommentContentController {
     @ApiOperationLog(description = "批量查询评论内容")
     public Response<?> batchFindCommentContent(@Validated @RequestBody BatchFindCommentContentReqDTO batchFindCommentContentReqDTO) {
         return commentContentService.batchFindCommentContent(batchFindCommentContentReqDTO);
+    }
+
+    @PostMapping(value = "/comment/content/delete")
+    @ApiOperationLog(description = "删除评论内容")
+    public Response<?> deleteCommentContent(@Validated @RequestBody DeleteCommentContentReqDTO deleteCommentContentReqDTO) {
+        return commentContentService.deleteCommentContent(deleteCommentContentReqDTO);
     }
 }

@@ -42,10 +42,17 @@ public class CommentController {
     public Response<?> likeComment(@RequestBody @Validated LikeCommentReqVO likeCommentReqVO) {
         return commentService.likeComment(likeCommentReqVO);
     }
+
     @PostMapping("/unlike")
-    @ApiOperationLog(description = "评论点赞")
+    @ApiOperationLog(description = "评论取消点赞")
     public Response<?> unLikeComment(@RequestBody @Validated UnLikeCommentReqVO unLikeCommentReqVO) {
         return commentService.unlikeComment(unLikeCommentReqVO);
+    }
+
+    @PostMapping("/delete")
+    @ApiOperationLog(description = "删除评论")
+    public Response<?> deleteComment(@RequestBody @Validated DeleteCommentReqVO deleteCommentReqVO) {
+        return commentService.deleteComment(deleteCommentReqVO);
     }
 
 
