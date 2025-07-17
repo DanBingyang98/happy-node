@@ -202,6 +202,7 @@ public class UserServiceImpl implements UserService {
 
     /**
      * 异步发送延时消息
+     *
      * @param userId
      */
     private void sendDelayDeleteUserRedisCacheMQ(Long userId) {
@@ -475,6 +476,8 @@ public class UserServiceImpl implements UserService {
             FindUserProfileRespVO findUserProfileRespVO = JsonUtils.parseObject(userProfileJson, FindUserProfileRespVO.class);
             // 异步加入到本地缓存
             syncUserProfile2LocalCache(userId, findUserProfileRespVO);
+            // 如果是作者本人查看自己的主页 另外调用计数服务 保证数据实时性
+            authorGetActualCountData(userId, findUserProfileRespVO);
             return Response.success(findUserProfileRespVO);
         }
         // 2. 再查询数据库
@@ -491,6 +494,32 @@ public class UserServiceImpl implements UserService {
         findUserProfileRespVO.setAge(age);
         // 3. Feign 调用计数服务
         // 关注数、粉丝数、收藏与点赞总数；发布的笔记数，获得的点赞数、收藏数
+        rpcCountServiceAndSetData(userId, findUserProfileRespVO);
+        // 异步缓存到redis
+        syncUserProfile2Redis(userProfileKey, findUserProfileRespVO);
+        // 异步加入到本地缓存
+        syncUserProfile2LocalCache(userId, findUserProfileRespVO);
+        return Response.success(findUserProfileRespVO);
+    }
+
+    /***
+     * 如果是作者本人查看自己的主页 另外调用计数服务 保证数据实时性
+     * @param userId
+     * @param findUserProfileRespVO
+     */
+    private void authorGetActualCountData(Long userId, FindUserProfileRespVO findUserProfileRespVO) {
+        if (Objects.equals(userId, LoginUserContextHolder.getUserId())) {
+            rpcCountServiceAndSetData(userId, findUserProfileRespVO);
+        }
+
+    }
+
+    /***
+     * Feign 调用计数服务, 并设置计数数据
+     * @param userId
+     * @param findUserProfileRespVO
+     */
+    private void rpcCountServiceAndSetData(Long userId, FindUserProfileRespVO findUserProfileRespVO) {
         FindUserCountsByIdRespDTO userCountData = countRpcService.findUserCountData(userId);
         if (Objects.nonNull(userCountData)) {
             Long followingTotal = userCountData.getFollowingTotal();
@@ -506,11 +535,7 @@ public class UserServiceImpl implements UserService {
             findUserProfileRespVO.setNoteTotal(NumberUtils.formatNumberString(noteTotal));
             findUserProfileRespVO.setLikeAndCollectTotal(NumberUtils.formatNumberString(likeTotal + collectTotal));
         }
-        // 异步缓存到redis
-        syncUserProfile2Redis(userProfileKey, findUserProfileRespVO);
-        // 异步加入到本地缓存
-        syncUserProfile2LocalCache(userId, findUserProfileRespVO);
-        return Response.success(findUserProfileRespVO);
+
     }
 
     /**
