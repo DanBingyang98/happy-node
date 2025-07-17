@@ -1,6 +1,8 @@
 package com.danby.happynode.user.biz.service;
 
 import com.danby.happynode.framework.common.response.Response;
+import com.danby.happynode.user.biz.model.vo.FindUserProfileReqVO;
+import com.danby.happynode.user.biz.model.vo.FindUserProfileRespVO;
 import com.danby.happynode.user.biz.model.vo.UpdateUserInfoReqVO;
 import com.danby.happynode.user.dto.req.*;
 import com.danby.happynode.user.dto.resp.FindUserByIdRespDTO;
@@ -57,4 +59,11 @@ public interface UserService {
      * @return
      */
     Response<List<FindUserByIdRespDTO>> findByIds(FindUsersByIdsReqDTO findUsersByIdsReqDTO);
+
+    /**
+     * 获取用户主页信息
+     *
+     * @return
+     */
+    Response<FindUserProfileRespVO> findUserProfile(FindUserProfileReqVO findUserProfileReqVO);
 }

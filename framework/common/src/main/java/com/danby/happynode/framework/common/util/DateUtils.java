@@ -2,7 +2,9 @@ package com.danby.happynode.framework.common.util;
 
 import com.danby.happynode.framework.common.constant.DateConstants;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
@@ -25,6 +27,7 @@ public class DateUtils {
 
     /**
      * LocalDateTime 转友好的相对时间字符串
+     *
      * @param dateTime
      * @return
      */
@@ -51,6 +54,22 @@ public class DateUtils {
         } else {  // 如果是去年或更早
             return dateTime.format(DateConstants.DATE_FORMAT_Y_M_D);
         }
+    }
+
+    /**
+     * 根据出生年月日计算年龄
+     *
+     * @param birthday
+     * @return
+     */
+    public static Integer calculateAge(LocalDate birthday) {
+        // 获取当前日期
+        LocalDate now = LocalDate.now();
+        // 计算出生日期到当前日期的 Period 对象
+        Period period = Period.between(birthday, now);
+        // 返回完整的年份（即年龄）
+        return period.getYears();
+
     }
 
     public static void main(String[] args) {

@@ -112,6 +112,11 @@
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.danby.happynode.count</groupId>
+            <artifactId>count-api</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

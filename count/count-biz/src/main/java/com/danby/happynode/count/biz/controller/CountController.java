@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/count")
 @Slf4j
-public class UserCountController {
+public class CountController {
     @Autowired
     private UserCountService userCountService;
 

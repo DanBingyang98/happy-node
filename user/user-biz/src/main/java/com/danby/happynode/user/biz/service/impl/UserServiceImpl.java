@@ -3,11 +3,14 @@ package com.danby.happynode.user.biz.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.danby.framework.context.holder.LoginUserContextHolder;
+import com.danby.happynode.count.dto.FindUserCountsByIdRespDTO;
 import com.danby.happynode.framework.common.enums.DeleteEnum;
 import com.danby.happynode.framework.common.enums.StatusEnum;
 import com.danby.happynode.framework.common.exception.BusinessException;
 import com.danby.happynode.framework.common.response.Response;
+import com.danby.happynode.framework.common.util.DateUtils;
 import com.danby.happynode.framework.common.util.JsonUtils;
+import com.danby.happynode.framework.common.util.NumberUtils;
 import com.danby.happynode.framework.common.util.ParamUtils;
 import com.danby.happynode.user.biz.constant.RedisKeyConstant;
 import com.danby.happynode.user.biz.constant.RoleConstants;
@@ -17,7 +20,10 @@ import com.danby.happynode.user.biz.domain.mapper.RoleDOMapper;
 import com.danby.happynode.user.biz.domain.mapper.UserDOMapper;
 import com.danby.happynode.user.biz.enums.ResponseCodeEnum;
 import com.danby.happynode.user.biz.enums.SexEnum;
+import com.danby.happynode.user.biz.model.vo.FindUserProfileReqVO;
+import com.danby.happynode.user.biz.model.vo.FindUserProfileRespVO;
 import com.danby.happynode.user.biz.model.vo.UpdateUserInfoReqVO;
+import com.danby.happynode.user.biz.rpc.CountRpcService;
 import com.danby.happynode.user.biz.rpc.DistributedIdGeneratorRpcService;
 import com.danby.happynode.user.biz.rpc.OssRpcService;
 import com.danby.happynode.user.biz.service.UserService;
@@ -69,6 +75,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
+    @Autowired
+    private CountRpcService countRpcService;
 
     /**
      * 用户信息本地缓存
@@ -375,5 +384,55 @@ public class UserServiceImpl implements UserService {
         }
 
         return Response.success(findUserByIdRespDTOS);
+    }
+
+    /**
+     * 获取用户主页信息
+     *
+     * @param findUserProfileReqVO
+     * @return FindUserProfileRespVO
+     */
+    @Override
+    public Response<FindUserProfileRespVO> findUserProfile(FindUserProfileReqVO findUserProfileReqVO) {
+        // 要查询的用户ID
+        Long userId = findUserProfileReqVO.getUserId();
+        // 若入参中用户 ID 为空，则查询当前登录用户
+        if (Objects.isNull(userId)) {
+            userId = LoginUserContextHolder.getUserId();
+        }
+        // TODO 1. 优先查询缓存
+
+
+        // 2. 再查询数据库
+        UserDO userDO = userDOMapper.selectByPrimaryKey(userId);
+        FindUserProfileRespVO findUserProfileRespVO = FindUserProfileRespVO.builder()
+                .userId(userDO.getId())
+                .avatar(userDO.getAvatar())
+                .happynodeId(userDO.getHappynodeId())
+                .nickname(userDO.getNickname())
+                .introduction(userDO.getIntroduction())
+                .sex(userDO.getSex())
+                .build();
+        Integer age = Objects.isNull(userDO.getBirthday()) ? 0 : DateUtils.calculateAge(userDO.getBirthday());
+        findUserProfileRespVO.setAge(age);
+        // 3. Feign 调用计数服务
+        // 关注数、粉丝数、收藏与点赞总数；发布的笔记数，获得的点赞数、收藏数
+        FindUserCountsByIdRespDTO userCountData = countRpcService.findUserCountData(userId);
+        if (Objects.nonNull(userCountData)) {
+            Long followingTotal = userCountData.getFollowingTotal();
+            Long fansTotal = userCountData.getFansTotal();
+            Long likeTotal = userCountData.getLikeTotal();
+            Long collectTotal = userCountData.getCollectTotal();
+            Long noteTotal = userCountData.getNoteTotal();
+
+            findUserProfileRespVO.setFollowingTotal(NumberUtils.formatNumberString(followingTotal));
+            findUserProfileRespVO.setFansTotal(NumberUtils.formatNumberString(fansTotal));
+            findUserProfileRespVO.setLikeTotal(NumberUtils.formatNumberString(likeTotal));
+            findUserProfileRespVO.setCollectTotal(NumberUtils.formatNumberString(collectTotal));
+            findUserProfileRespVO.setNoteTotal(NumberUtils.formatNumberString(noteTotal));
+            findUserProfileRespVO.setLikeAndCollectTotal(NumberUtils.formatNumberString(likeTotal + collectTotal));
+        }
+
+        return Response.success(findUserProfileRespVO);
     }
 }

@@ -2,6 +2,8 @@ package com.danby.happynode.user.biz.controller;
 
 import com.danby.happynode.framework.biz.operationlog.aspect.ApiOperationLog;
 import com.danby.happynode.framework.common.response.Response;
+import com.danby.happynode.user.biz.model.vo.FindUserProfileReqVO;
+import com.danby.happynode.user.biz.model.vo.FindUserProfileRespVO;
 import com.danby.happynode.user.biz.model.vo.UpdateUserInfoReqVO;
 import com.danby.happynode.user.biz.service.UserService;
 import com.danby.happynode.user.dto.req.*;
@@ -68,4 +70,14 @@ public class UserController {
         return userService.findByIds(findUsersByIdsReqDTO);
     }
 
+    /**
+     * 获取用户主页信息
+     *
+     * @return
+     */
+    @PostMapping("/profile")
+    @ApiOperationLog(description = "获取用户主页信息")
+    public Response<FindUserProfileRespVO> findUserProfile(@Validated @RequestBody FindUserProfileReqVO findUserProfileReqVO) {
+        return userService.findUserProfile(findUserProfileReqVO);
+    }
 }
