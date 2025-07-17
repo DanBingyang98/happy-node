@@ -107,7 +107,7 @@
             <artifactId>caffeine</artifactId>
         </dependency>
 
-<!--        rocketMQ-->
+        <!--        rocketMQ-->
         <!-- 使用旧版客户端（兼容 Spring Starter 2.x） -->
         <dependency>
             <groupId>org.apache.rocketmq</groupId>
@@ -120,10 +120,15 @@
             <version>4.9.7</version> <!-- 必须使用 4.9.x 客户端 -->
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.alibaba.cloud</groupId>-->
-<!--            <artifactId>spring-cloud-starter-stream-rocketmq</artifactId>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>com.danby.happynode.count</groupId>
+            <artifactId>count-api</artifactId>
+        </dependency>
+
+        <!--        <dependency>-->
+        <!--            <groupId>com.alibaba.cloud</groupId>-->
+        <!--            <artifactId>spring-cloud-starter-stream-rocketmq</artifactId>-->
+        <!--        </dependency>-->
 
     </dependencies>
 

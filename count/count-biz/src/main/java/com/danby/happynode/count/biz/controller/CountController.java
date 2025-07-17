@@ -1,6 +1,9 @@
 package com.danby.happynode.count.biz.controller;
 
+import com.danby.happynode.count.biz.service.NoteCountService;
 import com.danby.happynode.count.biz.service.UserCountService;
+import com.danby.happynode.count.dto.FindNoteCountsByIdRespDTO;
+import com.danby.happynode.count.dto.FindNoteCountsByIdsReqDTO;
 import com.danby.happynode.count.dto.FindUserCountsByIdReqDTO;
 import com.danby.happynode.count.dto.FindUserCountsByIdRespDTO;
 import com.danby.happynode.framework.biz.operationlog.aspect.ApiOperationLog;
@@ -13,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/count")
 @Slf4j
@@ -20,10 +25,20 @@ public class CountController {
     @Autowired
     private UserCountService userCountService;
 
+    @Autowired
+    private NoteCountService noteCountService;
+
     @PostMapping(value = "/user/data")
     @ApiOperationLog(description = "获取用户计数数据")
     public Response<FindUserCountsByIdRespDTO> findUserCountData(@Validated @RequestBody FindUserCountsByIdReqDTO findUserCountsByIdReqDTO) {
         return userCountService.findUserCountData(findUserCountsByIdReqDTO);
+    }
+
+    @PostMapping(value = "/note/data")
+    @ApiOperationLog(description = "批量获取笔记计数数据")
+    public Response<List<FindNoteCountsByIdRespDTO>> findNotesCountData(@Validated @RequestBody FindNoteCountsByIdsReqDTO findNoteCountsByIdsReqDTO) {
+        return noteCountService.findNoteCountsByIds(findNoteCountsByIdsReqDTO);
+
     }
 
 }

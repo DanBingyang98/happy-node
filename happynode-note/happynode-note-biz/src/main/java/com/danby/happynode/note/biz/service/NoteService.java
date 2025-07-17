@@ -78,6 +78,7 @@ public interface NoteService {
 
     /**
      * 收藏笔记
+     *
      * @param collectNoteReqVO
      * @return
      */
@@ -85,6 +86,7 @@ public interface NoteService {
 
     /**
      * 取消收藏笔记
+     *
      * @param unCollectNoteReqVO
      * @return
      */
@@ -92,8 +94,17 @@ public interface NoteService {
 
     /**
      * 获取是否点赞、收藏数据
+     *
      * @param findNoteIsLikedAndCollectedReqVO
      * @return
      */
     Response<FindNoteIsLikedAndCollectedRespVO> isLikedAndCollectedData(FindNoteIsLikedAndCollectedReqVO findNoteIsLikedAndCollectedReqVO);
+
+    /***
+     * 用户主页 - 查询已发布的笔记列表
+     * @param findPublishedNoteListReqVO
+     * @return
+     */
+    Response<FindPublishedNoteListRespVO> findPublishedNoteList(FindPublishedNoteListReqVO findPublishedNoteListReqVO);
+
 }

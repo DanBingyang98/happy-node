@@ -3,6 +3,8 @@ package com.danby.happynode.count.biz.domain.mapper;
 import com.danby.happynode.count.biz.domain.dataobject.NoteCountDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 public interface NoteCountDOMapper {
     int deleteByPrimaryKey(Long id);
 
@@ -31,4 +33,12 @@ public interface NoteCountDOMapper {
      * @return
      */
     int insertOrUpdateCommentTotalByNoteId(@Param("count") Integer count, @Param("noteId") Long noteId);
+
+    /***
+     * 批量根据笔记id查询其计数信息
+     * @param noteIds
+     * @return
+     */
+    List<NoteCountDO> selectByNoteIds(@Param("noteIds") List<Long> noteIds);
+
 }
