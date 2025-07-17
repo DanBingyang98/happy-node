@@ -22,6 +22,7 @@ public class SaTokenConfigure {
                     SaRouter.match("/**")
                             .notMatch("/auth/login")
                             .notMatch("/auth/verify/phone")
+                            .notMatch("/user/user/profile")
                             .check(r -> StpUtil.checkLogin());
                     // 权限认证 -- 不同模块, 校验不同权限
                     SaRouter.match("/auth/logout", r -> StpUtil.checkRole("common_user"));

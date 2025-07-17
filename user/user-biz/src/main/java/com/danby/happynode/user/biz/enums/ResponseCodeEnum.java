@@ -21,6 +21,7 @@ public enum ResponseCodeEnum implements BaseExceptionInterface {
     SEX_VALID_FAIL("USER-20003", "性别错误"),
     INTRODUCTION_VALID_FAIL("USER-20004", "个人简介请设置1-100个字符"),
     USER_NOT_FOUND("USER-20007", "该用户不存在"),
+    CANT_UPDATE_OTHER_USER_PROFILE("USER-20008", "无权限修改他人用户信息"),
     ;
 
     // 异常码

@@ -21,6 +21,7 @@ spring:
     import:
       - nacos:happynode-database?group=common
       - nacos:happynode-redis?group=common
+      - nacos:happynode-rocketmq?group=common
 management:
   endpoints:
     web:

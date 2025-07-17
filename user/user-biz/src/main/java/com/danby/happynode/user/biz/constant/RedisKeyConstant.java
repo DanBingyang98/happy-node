@@ -23,6 +23,11 @@ public class RedisKeyConstant {
     private static final String USER_PROFILE_KEY_PREFIX = "user:profile:";
 
     /**
+     * 角色对应的权限集合 KEY 前缀
+     */
+    public static final String ROLE_PERMISSIONS_KEY_PREFIX = "role:permissions:";
+
+    /**
      * 构建用户角色 KEY
      *
      * @param userId
@@ -31,11 +36,6 @@ public class RedisKeyConstant {
     public static String buildUserRoleKey(Long userId) {
         return USER_ROLE_KEY_PREFIX + userId;
     }
-
-    /**
-     * 角色对应的权限集合 KEY 前缀
-     */
-    public static final String ROLE_PERMISSIONS_KEY_PREFIX = "role:permissions:";
 
     /**
      * 构建角色对应的权限集合 KEY
@@ -49,6 +49,7 @@ public class RedisKeyConstant {
 
     /**
      * 构建角色对应的权限集合 KEY
+     *
      * @param userId
      * @return
      */
@@ -58,6 +59,7 @@ public class RedisKeyConstant {
 
     /**
      * 构建角色主页信息对应的 KEY
+     *
      * @param userId
      * @return
      */

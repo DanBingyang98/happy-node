@@ -12,6 +12,7 @@ import com.danby.happynode.framework.common.util.DateUtils;
 import com.danby.happynode.framework.common.util.JsonUtils;
 import com.danby.happynode.framework.common.util.NumberUtils;
 import com.danby.happynode.framework.common.util.ParamUtils;
+import com.danby.happynode.user.biz.constant.MQConstants;
 import com.danby.happynode.user.biz.constant.RedisKeyConstant;
 import com.danby.happynode.user.biz.constant.RoleConstants;
 import com.danby.happynode.user.biz.domain.dataobject.RoleDO;
@@ -35,11 +36,16 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.rocketmq.client.producer.SendCallback;
+import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SessionCallback;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,10 +53,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -79,6 +82,9 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private CountRpcService countRpcService;
 
+    @Autowired
+    private RocketMQTemplate rocketMQTemplate;
+
     /**
      * 用户主页信息本地缓存
      */
@@ -105,6 +111,11 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public Response<?> updateUserInfo(UpdateUserInfoReqVO updateUserInfoReqVO) {
+        Long userId = updateUserInfoReqVO.getUserId();
+        Long loginUserId = LoginUserContextHolder.getUserId();
+        if (!Objects.equals(userId, loginUserId)) {
+            throw new BusinessException(ResponseCodeEnum.CANT_UPDATE_OTHER_USER_PROFILE);
+        }
         UserDO userDO = new UserDO();
         // 设置当前需要更新的用户 ID
         userDO.setId(LoginUserContextHolder.getUserId());
@@ -177,11 +188,49 @@ public class UserServiceImpl implements UserService {
         }
 
         if (needUpdate) {
+            // 延迟双删 第一次删除用户缓存
+            deleteUserRedisCache(userId);
             // 更新用户信息
             userDO.setUpdateTime(LocalDateTime.now());
             userDOMapper.updateByPrimaryKeySelective(userDO);
+            // 延时双删
+            sendDelayDeleteUserRedisCacheMQ(userId);
+
         }
         return Response.success();
+    }
+
+    /**
+     * 异步发送延时消息
+     * @param userId
+     */
+    private void sendDelayDeleteUserRedisCacheMQ(Long userId) {
+        Message<String> message = MessageBuilder.withPayload(String.valueOf(userId)).build();
+        rocketMQTemplate.asyncSend(MQConstants.TOPIC_DELAY_DELETE_USER_REDIS_CACHE, message, new SendCallback() {
+                    @Override
+                    public void onSuccess(SendResult sendResult) {
+                        log.info("## 延时删除 Redis 用户缓存消息发送成功...");
+                    }
+
+                    @Override
+                    public void onException(Throwable throwable) {
+                        log.error("## 延时删除 Redis 用户缓存消息发送失败...", throwable);
+                    }
+                },
+                3000, // 超时时间
+                1 // 延迟级别，1 表示延时 1s
+        );
+    }
+
+    /**
+     * 删除 Redis 中的用户缓存
+     *
+     * @param userId
+     */
+    private void deleteUserRedisCache(Long userId) {
+        String userInfoKey = RedisKeyConstant.buildUserInfoKey(userId);
+        String userProfileKey = RedisKeyConstant.buildUserProfileKey(userId);
+        redisTemplate.delete(Arrays.asList(userInfoKey, userProfileKey));
     }
 
     @Override
@@ -411,10 +460,13 @@ public class UserServiceImpl implements UserService {
         }
         // 1. 优先查询缓存
         // 1.1 查本地缓存
-        FindUserProfileRespVO userProfileLocalCache = USER_PROFILE_CACHE.getIfPresent(userId);
-        if (Objects.nonNull(userProfileLocalCache)) {
-            log.info("## 用户主页信息命中本地缓存: {}", JsonUtils.toJsonString(userProfileLocalCache));
-            return Response.success(userProfileLocalCache);
+        // 如果是用户本人查看自己的主页，则不走本地缓存（对本人保证实时性）
+        if (!Objects.equals(userId, LoginUserContextHolder.getUserId())) {
+            FindUserProfileRespVO userProfileLocalCache = USER_PROFILE_CACHE.getIfPresent(userId);
+            if (Objects.nonNull(userProfileLocalCache)) {
+                log.info("## 用户主页信息命中本地缓存: {}", JsonUtils.toJsonString(userProfileLocalCache));
+                return Response.success(userProfileLocalCache);
+            }
         }
         // 1.2 查redis缓存
         String userProfileKey = RedisKeyConstant.buildUserProfileKey(userId);
