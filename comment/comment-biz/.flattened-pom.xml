@@ -4,13 +4,14 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.danby</groupId>
-    <artifactId>count</artifactId>
+    <artifactId>comment</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
-  <groupId>com.danby.happynode.count.biz</groupId>
-  <artifactId>count-biz</artifactId>
+  <groupId>com.danby.happynode.comment.biz</groupId>
+  <artifactId>comment-biz</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>${project.artifactId}</name>
+  <description>评论服务业务层</description>
   <dependencies>
     <dependency>
       <groupId>com.danby.happynode.framework.common</groupId>
@@ -34,12 +35,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.alibaba.cloud</groupId>
-      <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.alibaba.cloud</groupId>
-      <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis</artifactId>
     </dependency>
     <dependency>
       <groupId>org.mybatis.spring.boot</groupId>
@@ -54,12 +51,12 @@
       <artifactId>druid-spring-boot-3-starter</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-pool2</artifactId>
+      <groupId>com.alibaba.cloud</groupId>
+      <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-data-redis</artifactId>
+      <groupId>com.alibaba.cloud</groupId>
+      <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.rocketmq</groupId>
@@ -72,12 +69,32 @@
       <version>4.9.7</version>
     </dependency>
     <dependency>
+      <groupId>org.springframework.retry</groupId>
+      <artifactId>spring-retry</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-aop</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.danby</groupId>
+      <artifactId>happynode-distributed-id-generator-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.danby.happynode.kv</groupId>
+      <artifactId>happynode-kv-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.github.phantomthief</groupId>
       <artifactId>buffer-trigger</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.danby.happynode.count</groupId>
-      <artifactId>count-api</artifactId>
+      <groupId>com.danby.happynode</groupId>
+      <artifactId>user-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
     </dependency>
   </dependencies>
   <build>

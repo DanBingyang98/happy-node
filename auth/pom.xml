@@ -117,7 +117,7 @@
 
         <!-- 上下文组件 -->
         <dependency>
-            <groupId>com.danby</groupId>
+            <groupId>com.danby.happynode</groupId>
             <artifactId>danby-spring-boot-starter-biz-context</artifactId>
         </dependency>
         <!-- 密码加密 -->

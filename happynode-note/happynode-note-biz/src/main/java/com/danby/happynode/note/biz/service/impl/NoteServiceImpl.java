@@ -12,6 +12,7 @@ import com.danby.happynode.framework.common.util.JsonUtils;
 import com.danby.happynode.framework.common.util.NumberUtils;
 import com.danby.happynode.note.biz.constant.MQConstants;
 import com.danby.happynode.note.biz.constant.RedisKeyConstants;
+import com.danby.happynode.note.biz.convert.NoteConvert;
 import com.danby.happynode.note.biz.domain.dataobject.NoteCollectionDO;
 import com.danby.happynode.note.biz.domain.dataobject.NoteDO;
 import com.danby.happynode.note.biz.domain.dataobject.NoteLikeDO;
@@ -23,6 +24,7 @@ import com.danby.happynode.note.biz.enums.*;
 import com.danby.happynode.note.biz.model.dto.CollectUnCollectNoteMqDTO;
 import com.danby.happynode.note.biz.model.dto.LikeUnlikeNoteMqDTO;
 import com.danby.happynode.note.biz.model.dto.NoteOperateMqDTO;
+import com.danby.happynode.note.biz.model.dto.PublishNoteDTO;
 import com.danby.happynode.note.biz.model.vo.*;
 import com.danby.happynode.note.biz.rpc.CountRpcService;
 import com.danby.happynode.note.biz.rpc.DistributedIdGeneratorRpcService;
@@ -40,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.client.producer.TransactionSendResult;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -137,12 +140,12 @@ public class NoteServiceImpl implements NoteService {
             // 生成笔记内容 UUID
             contentUuid = UUID.randomUUID().toString();
             // RPC: 调用 KV 键值服务，存储短文本
-            boolean isSavedSuccess = keyValueRpcService.addNoteContent(contentUuid, content);
+//            boolean isSavedSuccess = keyValueRpcService.addNoteContent(contentUuid, content);
 
             // 若存储失败，抛出业务异常，提示用户发布笔记失败
-            if (!isSavedSuccess) {
-                throw new BusinessException(ResponseCodeEnum.NOTE_PUBLISH_FAIL);
-            }
+//            if (!isSavedSuccess) {
+//                throw new BusinessException(ResponseCodeEnum.NOTE_PUBLISH_FAIL);
+//            }
         }
 
         // 话题
@@ -175,26 +178,41 @@ public class NoteServiceImpl implements NoteService {
                 .contentUuid(contentUuid)
                 .build();
 
+        // 若笔记正文未填写，不用发事务消息
+        if (StringUtils.isBlank(content)) {
+            processPublishContentEmptyNote(creatorId, noteDO, snowflakeIdId);
+            return Response.success();
+        }
+
+        // 发送事务消息
+        // 构建消息内容
+        PublishNoteDTO publishNoteDTO = NoteConvert.INSTANCE.convertDO2DTO(noteDO);
+        publishNoteDTO.setContent(content);
+        Message<String> message = MessageBuilder.withPayload(JsonUtils.toJsonString(publishNoteDTO)).build();
+        // 发送事务消息
+        TransactionSendResult transactionSendResult = rocketMQTemplate.sendMessageInTransaction(MQConstants.TOPIC_PUBLISH_NOTE_TRANSACTION, message, null);
+        log.info("## 事务消息发送结果: {}", transactionSendResult.getLocalTransactionState());
+        return Response.success();
+    }
+
+    /***
+     * 处理发布笔记文本为空的情况
+     * @param creatorId
+     * @param noteDO
+     * @param snowflakeIdId
+     */
+    private void processPublishContentEmptyNote(Long creatorId, NoteDO noteDO, String snowflakeIdId) {
         // 延迟双删
         // 删除个人主页 - 已发布笔记列表缓存
         // TODO 如果是大V (粉丝数超过10000) 应该直接更新缓存，而不是直接删除；普通用户则可直接删除
         String publishedNoteListKey = RedisKeyConstants.buildPublishedNoteListKey(creatorId);
         redisTemplate.delete(publishedNoteListKey);
 
-        try {
-            // 笔记入库存储
-            noteDOMapper.insert(noteDO);
-        } catch (Exception e) {
-            log.error("==> 笔记存储失败", e);
-            // RPC: 笔记保存失败，则删除笔记内容
-            if (StringUtils.isNotBlank(contentUuid)) {
-                keyValueRpcService.deleteNoteContent(contentUuid);
-            }
-        }
+        // 笔记入库存储
+        noteDOMapper.insert(noteDO);
 
         // 延迟双删 发送MQ删除来达到延迟目的
         sendDelayDeleteRedisPublishedNoteListMQ(creatorId);
-
 
         // 发送 MQ
         // 构建消息体 DTO
@@ -219,8 +237,6 @@ public class NoteServiceImpl implements NoteService {
                 log.error("==> 【笔记发布】MQ 发送异常: ", throwable);
             }
         });
-
-        return Response.success();
     }
 
     /***

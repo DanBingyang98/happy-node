@@ -4,18 +4,18 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.danby</groupId>
-    <artifactId>happy-node</artifactId>
+    <artifactId>happynode-user-relation</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
-  <groupId>com.danby.happynode</groupId>
-  <artifactId>happy-node-framework</artifactId>
+  <groupId>com.danby.happynode.user.relation</groupId>
+  <artifactId>happynode-user-relation-api</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <packaging>pom</packaging>
   <name>${project.artifactId}</name>
-  <modules>
-    <module>common</module>
-    <module>danby-spring-boot-starter-biz-operationlog</module>
-    <module>danby-spring-boot-starter-jackson-localdatetime</module>
-    <module>danby-spring-boot-starter-biz-context</module>
-  </modules>
+  <description>RPC层, 供其他服务调用</description>
+  <dependencies>
+    <dependency>
+      <groupId>com.danby.happynode.framework.common</groupId>
+      <artifactId>common</artifactId>
+    </dependency>
+  </dependencies>
 </project>

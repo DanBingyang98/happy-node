@@ -7,15 +7,14 @@
     <artifactId>happy-node</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
-  <groupId>com.danby.happynode</groupId>
-  <artifactId>happy-node-framework</artifactId>
+  <groupId>com.danby</groupId>
+  <artifactId>happynode-distributed-id-generator</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>${project.artifactId}</name>
+  <description>分布式 ID 生成服务</description>
   <modules>
-    <module>common</module>
-    <module>danby-spring-boot-starter-biz-operationlog</module>
-    <module>danby-spring-boot-starter-jackson-localdatetime</module>
-    <module>danby-spring-boot-starter-biz-context</module>
+    <module>happynode-distributed-id-generator-api</module>
+    <module>happynode-distributed-id-generator-biz</module>
   </modules>
 </project>

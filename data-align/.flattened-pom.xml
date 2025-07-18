@@ -4,25 +4,21 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.danby</groupId>
-    <artifactId>count</artifactId>
+    <artifactId>happy-node</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
-  <groupId>com.danby.happynode.count.biz</groupId>
-  <artifactId>count-biz</artifactId>
+  <groupId>com.danby.happynode.data.align</groupId>
+  <artifactId>data-align</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>${project.artifactId}</name>
+  <description>数据对齐服务</description>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>com.danby.happynode.framework.common</groupId>
       <artifactId>common</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.danby.happynode</groupId>
-      <artifactId>danby-spring-boot-starter-biz-operationlog</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.danby.happynode</groupId>
-      <artifactId>danby-spring-boot-starter-biz-context</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -32,14 +28,6 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.alibaba.cloud</groupId>
-      <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.alibaba.cloud</groupId>
-      <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
     </dependency>
     <dependency>
       <groupId>org.mybatis.spring.boot</groupId>
@@ -54,12 +42,24 @@
       <artifactId>druid-spring-boot-3-starter</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-pool2</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-data-redis</artifactId>
+      <groupId>com.alibaba.cloud</groupId>
+      <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.alibaba.cloud</groupId>
+      <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.xuxueli</groupId>
+      <artifactId>xxl-job-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.rocketmq</groupId>
@@ -72,24 +72,8 @@
       <version>4.9.7</version>
     </dependency>
     <dependency>
-      <groupId>com.github.phantomthief</groupId>
-      <artifactId>buffer-trigger</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.danby.happynode.count</groupId>
-      <artifactId>count-api</artifactId>
+      <groupId>com.danby.happynode.search</groupId>
+      <artifactId>search-api</artifactId>
     </dependency>
   </dependencies>
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.mybatis.generator</groupId>
-        <artifactId>mybatis-generator-maven-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
 </project>

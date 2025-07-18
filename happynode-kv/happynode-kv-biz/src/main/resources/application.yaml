@@ -20,6 +20,7 @@ spring:
   config:
     import:
       - nacos:happynode-cassandra?group=common
+      - nacos:happynode-rocketmq?group=common
 management:
   endpoints:
     web:

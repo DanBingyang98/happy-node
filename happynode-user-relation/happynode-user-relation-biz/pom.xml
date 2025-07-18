@@ -30,7 +30,7 @@
         </dependency>
         <!-- 上下文组件 -->
         <dependency>
-            <groupId>com.danby</groupId>
+            <groupId>com.danby.happynode</groupId>
             <artifactId>danby-spring-boot-starter-biz-context</artifactId>
         </dependency>
         <!-- spring-boot-web启动依赖 -->

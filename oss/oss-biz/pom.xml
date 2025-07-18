@@ -79,7 +79,7 @@
 
         <!-- id上下文 -->
         <dependency>
-            <groupId>com.danby</groupId>
+            <groupId>com.danby.happynode</groupId>
             <artifactId>danby-spring-boot-starter-biz-context</artifactId>
         </dependency>
     </dependencies>

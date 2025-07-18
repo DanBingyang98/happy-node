@@ -3,26 +3,21 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>com.danby</groupId>
-    <artifactId>count</artifactId>
+    <groupId>com.danby.happynode</groupId>
+    <artifactId>user</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
-  <groupId>com.danby.happynode.count.biz</groupId>
-  <artifactId>count-biz</artifactId>
+  <groupId>com.danby.happynode</groupId>
+  <artifactId>user-biz</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <name>${project.artifactId}</name>
+  <name>${artifactId}</name>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>com.danby.happynode.framework.common</groupId>
       <artifactId>common</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.danby.happynode</groupId>
-      <artifactId>danby-spring-boot-starter-biz-operationlog</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.danby.happynode</groupId>
-      <artifactId>danby-spring-boot-starter-biz-context</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -54,12 +49,46 @@
       <artifactId>druid-spring-boot-3-starter</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-pool2</artifactId>
+      <groupId>com.danby.happynode</groupId>
+      <artifactId>danby-spring-boot-starter-biz-operationlog</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.danby.happynode</groupId>
+      <artifactId>danby-spring-boot-starter-biz-context</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.danby.happynode.oss</groupId>
+      <artifactId>oss-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.danby.happynode</groupId>
+      <artifactId>user-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-redis</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-pool2</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>7.11.0</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.danby</groupId>
+      <artifactId>happynode-distributed-id-generator-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.danby.happynode.count</groupId>
+      <artifactId>count-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.rocketmq</groupId>
@@ -70,14 +99,6 @@
       <groupId>org.apache.rocketmq</groupId>
       <artifactId>rocketmq-client</artifactId>
       <version>4.9.7</version>
-    </dependency>
-    <dependency>
-      <groupId>com.github.phantomthief</groupId>
-      <artifactId>buffer-trigger</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.danby.happynode.count</groupId>
-      <artifactId>count-api</artifactId>
     </dependency>
   </dependencies>
   <build>

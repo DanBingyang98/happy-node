@@ -7,15 +7,13 @@
     <artifactId>happy-node</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
-  <groupId>com.danby.happynode</groupId>
-  <artifactId>happy-node-framework</artifactId>
+  <groupId>com.danby.happynode.search</groupId>
+  <artifactId>search</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>${project.artifactId}</name>
   <modules>
-    <module>common</module>
-    <module>danby-spring-boot-starter-biz-operationlog</module>
-    <module>danby-spring-boot-starter-jackson-localdatetime</module>
-    <module>danby-spring-boot-starter-biz-context</module>
+    <module>search-biz</module>
+    <module>search-api</module>
   </modules>
 </project>

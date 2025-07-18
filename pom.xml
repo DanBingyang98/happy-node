@@ -14,8 +14,7 @@
         <module>auth</module>
         <module>framework</module>
         <module>gateway</module>
-        <module>framework/danby-spring-boot-starter-biz-context</module>
-        <module>framework/danby-spring-boot-starter-biz-context</module>
+<!--        <module>framework/danby-spring-boot-starter-biz-context</module>-->
         <module>oss</module>
         <module>user</module>
         <module>happynode-kv</module>
@@ -23,7 +22,6 @@
         <module>happynode-note</module>
         <module>happynode-user-relation</module>
         <module>count</module>
-        <module>data-align</module>
         <module>data-align</module>
         <module>search</module>
         <module>comment</module>
@@ -72,6 +70,7 @@
         <xxl-job.version>3.1.0</xxl-job.version>
         <elasticsearch.version>7.3.0</elasticsearch.version>
         <canal.version>1.1.7</canal.version>
+        <mapstruct.version>1.5.5.Final</mapstruct.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -185,7 +184,7 @@
             </dependency>
 
             <dependency>
-                <groupId>com.danby</groupId>
+                <groupId>com.danby.happynode</groupId>
                 <artifactId>danby-spring-boot-starter-biz-context</artifactId>
                 <version>${revision}</version>
             </dependency>
@@ -330,6 +329,13 @@
                 <version>${revision}</version>
             </dependency>
 
+            <!-- Mapstruct 属性映射 -->
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+
         </dependencies>
 
 
@@ -367,6 +373,11 @@
                                 <artifactId>lombok</artifactId>
                                 <version>${lombok.version}</version>
                             </path>
+                            <path>
+                                <groupId>org.mapstruct</groupId>
+                                <artifactId>mapstruct-processor</artifactId>
+                                <version>${mapstruct.version}</version>
+                            </path>
                         </annotationProcessorPaths>
                     </configuration>
                 </plugin>
@@ -390,6 +401,8 @@
                         </dependency>
                     </dependencies>
                 </plugin>
+
+
             </plugins>
         </pluginManagement>
 

@@ -52,5 +52,19 @@
             <groupId>com.danby.happynode</groupId>
             <artifactId>danby-spring-boot-starter-biz-operationlog</artifactId>
         </dependency>
+
+        <!--        rocketMQ-->
+        <!-- 使用旧版客户端（兼容 Spring Starter 2.x） -->
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-spring-boot-starter</artifactId>
+            <version>2.2.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-client</artifactId>
+            <version>4.9.7</version> <!-- 必须使用 4.9.x 客户端 -->
+        </dependency>
+
     </dependencies>
 </project>
