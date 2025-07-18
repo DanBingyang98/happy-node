@@ -54,4 +54,9 @@ public class NoteItemRespVO {
      * 被点赞数
      */
     private String likeTotal;
+
+    /**
+     * 是否被点赞
+     */
+    private Boolean isLiked;
 }

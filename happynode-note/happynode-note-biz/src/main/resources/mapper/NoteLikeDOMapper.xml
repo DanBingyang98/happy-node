@@ -36,6 +36,14 @@
         select note_id, create_time from t_note_like
         where user_id = #{userId} and status = 1 order by create_time desc limit #{limit}
     </select>
+    <select id="selectByUserIdAndNoteIds" parameterType="map" resultMap="BaseResultMap">
+        SELECT note_id,user_id
+        FROM t_note_like
+        WHERE user_id=#{userId} AND status=1 AND note_id IN
+        <foreach collection="noteIds" item="noteId" open="(" separator="," close=")">
+            #{noteId}
+        </foreach>
+    </select>
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
         delete
         from t_note_like
